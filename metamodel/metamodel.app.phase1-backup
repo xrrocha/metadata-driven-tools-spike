@@ -1,7 +1,7 @@
 application metamodel
 
 // =============================================================================
-// PHASE 1: STRUCTURAL ENTITIES
+// METAMODEL ENTITIES - WebDSL Modeling Itself
 // =============================================================================
 
 entity DomainApp {
@@ -14,11 +14,6 @@ entity DomainEntity {
   application -> DomainApp
   properties : {EntityProperty} (inverse = entity)
   relationships : {Relationship} (inverse = sourceEntity)
-  
-  // Phase 2: Behavioral
-  validationRules : {ValidationRule} (inverse = entity)
-  derivedProperties : {DerivedProperty} (inverse = entity)
-  functions : {EntityFunction} (inverse = entity)
 }
 
 entity EntityProperty {
@@ -35,39 +30,11 @@ entity Relationship {
   inverseName : String       // Empty if unidirectional
 }
 
-// =============================================================================
-// PHASE 2: BEHAVIORAL ENTITIES
-// =============================================================================
-
-entity ValidationRule {
-  name : String
-  expression : String  // e.g., "age >= 18"
-  message : String     // e.g., "Must be 18 or older"
-  entity -> DomainEntity
-}
-
-entity DerivedProperty {
-  name : String
-  propertyType : String
-  expression : String  // e.g., "firstName + ' ' + lastName"
-  entity -> DomainEntity
-}
-
-entity EntityFunction {
-  name : String
-  returnType : String  // Empty string if void
-  body : String        // Function body as text
-  entity -> DomainEntity
-}
-
-// Generate CRUD for all entities
+// Generate CRUD early
 derive CRUD DomainApp
 derive CRUD DomainEntity
 derive CRUD EntityProperty
 derive CRUD Relationship
-derive CRUD ValidationRule
-derive CRUD DerivedProperty
-derive CRUD EntityFunction
 
 // =============================================================================
 // ROOT PAGE
@@ -80,18 +47,10 @@ page root() {
   
   par { "Model WebDSL applications as data, then generate code." }
   
-  header { "Phase 1: Structural" }
   par { navigate manageDomainApp() { "Manage Applications" } }
   par { navigate manageDomainEntity() { "Manage Entities" } }
   par { navigate manageEntityProperty() { "Manage Properties" } }
   par { navigate manageRelationship() { "Manage Relationships" } }
-  
-  header { "Phase 2: Behavioral" }
-  par { navigate manageValidationRule() { "Manage ValidationRules" } }
-  par { navigate manageDerivedProperty() { "Manage DerivedPropertys" } }
-  par { navigate manageEntityFunction() { "Manage EntityFunctions" } }
-  
-  header { "Actions" }
   par { navigate codeGenerator() { "Generate Code" } }
   par { navigate bootstrapPage() { "Bootstrap Metamodel (Self-Description)" } }
 }
@@ -105,7 +64,7 @@ page bootstrapPage() {
   
   header { "Bootstrap Self-Describing Data" }
   
-  par { "This will create entities that describe the metamodel itself (Phase 1 + Phase 2)." }
+  par { "This will create entities that describe the metamodel itself." }
   
   var apps := DomainApp.all()
   if(apps.length > 0) {
@@ -125,7 +84,7 @@ page bootstrapPage() {
     var theApp := DomainApp { name := "metamodel" };
     theApp.save();
     
-    // Create Entities (Phase 1)
+    // Create Entities
     var entApp := DomainEntity { name := "DomainApp", application := theApp };
     entApp.save();
     
@@ -137,16 +96,6 @@ page bootstrapPage() {
     
     var entRelationship := DomainEntity { name := "Relationship", application := theApp };
     entRelationship.save();
-    
-    // Create Entities (Phase 2)
-    var entValidation := DomainEntity { name := "ValidationRule", application := theApp };
-    entValidation.save();
-    
-    var entDerived := DomainEntity { name := "DerivedProperty", application := theApp };
-    entDerived.save();
-    
-    var entFunction := DomainEntity { name := "EntityFunction", application := theApp };
-    entFunction.save();
     
     // Properties for DomainApp
     var propAppName := EntityProperty { 
@@ -201,72 +150,6 @@ page bootstrapPage() {
     };
     propRelInverse.save();
     
-    // Properties for ValidationRule
-    var propValName := EntityProperty {
-      name := "name",
-      propertyType := "String",
-      entity := entValidation
-    };
-    propValName.save();
-    
-    var propValExpr := EntityProperty {
-      name := "expression",
-      propertyType := "String",
-      entity := entValidation
-    };
-    propValExpr.save();
-    
-    var propValMsg := EntityProperty {
-      name := "message",
-      propertyType := "String",
-      entity := entValidation
-    };
-    propValMsg.save();
-    
-    // Properties for DerivedProperty
-    var propDerName := EntityProperty {
-      name := "name",
-      propertyType := "String",
-      entity := entDerived
-    };
-    propDerName.save();
-    
-    var propDerType := EntityProperty {
-      name := "propertyType",
-      propertyType := "String",
-      entity := entDerived
-    };
-    propDerType.save();
-    
-    var propDerExpr := EntityProperty {
-      name := "expression",
-      propertyType := "String",
-      entity := entDerived
-    };
-    propDerExpr.save();
-    
-    // Properties for EntityFunction
-    var propFuncName := EntityProperty {
-      name := "name",
-      propertyType := "String",
-      entity := entFunction
-    };
-    propFuncName.save();
-    
-    var propFuncReturn := EntityProperty {
-      name := "returnType",
-      propertyType := "String",
-      entity := entFunction
-    };
-    propFuncReturn.save();
-    
-    var propFuncBody := EntityProperty {
-      name := "body",
-      propertyType := "String",
-      entity := entFunction
-    };
-    propFuncBody.save();
-    
     // Relationships for DomainApp
     var relAppEntities := Relationship {
       name := "entities",
@@ -305,34 +188,6 @@ page bootstrapPage() {
     };
     relEntityRels.save();
     
-    // Phase 2: Behavioral relationships for DomainEntity
-    var relEntityVals := Relationship {
-      name := "validationRules",
-      relationshipType := "collection",
-      sourceEntity := entEntity,
-      targetEntity := entValidation,
-      inverseName := "entity"
-    };
-    relEntityVals.save();
-    
-    var relEntityDerived := Relationship {
-      name := "derivedProperties",
-      relationshipType := "collection",
-      sourceEntity := entEntity,
-      targetEntity := entDerived,
-      inverseName := "entity"
-    };
-    relEntityDerived.save();
-    
-    var relEntityFuncs := Relationship {
-      name := "functions",
-      relationshipType := "collection",
-      sourceEntity := entEntity,
-      targetEntity := entFunction,
-      inverseName := "entity"
-    };
-    relEntityFuncs.save();
-    
     // Relationships for EntityProperty
     var relPropEntity := Relationship {
       name := "entity",
@@ -361,36 +216,6 @@ page bootstrapPage() {
       inverseName := ""
     };
     relRelTarget.save();
-    
-    // Relationships for ValidationRule
-    var relValEntity := Relationship {
-      name := "entity",
-      relationshipType := "reference",
-      sourceEntity := entValidation,
-      targetEntity := entEntity,
-      inverseName := ""
-    };
-    relValEntity.save();
-    
-    // Relationships for DerivedProperty
-    var relDerEntity := Relationship {
-      name := "entity",
-      relationshipType := "reference",
-      sourceEntity := entDerived,
-      targetEntity := entEntity,
-      inverseName := ""
-    };
-    relDerEntity.save();
-    
-    // Relationships for EntityFunction
-    var relFuncEntity := Relationship {
-      name := "entity",
-      relationshipType := "reference",
-      sourceEntity := entFunction,
-      targetEntity := entEntity,
-      inverseName := ""
-    };
-    relFuncEntity.save();
     
     return root();
   }
@@ -465,32 +290,13 @@ function generateEntity(e : DomainEntity) : String {
     code := code + "  " + p.name + " : " + p.propertyType + "\n";
   }
   
-  // Generate derived properties
-  var derivedProps := e.derivedProperties;
-  for(dp in derivedProps order by dp.name) {
-    code := code + "  derive " + dp.name + " : " + dp.propertyType + " = " + dp.expression + "\n";
-  }
-  
   // Generate relationships
   var rels := e.relationships;
   for(r in rels order by r.name) {
     code := code + generateRelationship(r);
   }
   
-  // Generate validation rules
-  var vals := e.validationRules;
-  for(v in vals order by v.name) {
-    code := code + "  validate(" + v.expression + ", \"" + v.message + "\")\n";
-  }
-  
   code := code + "}";
-  
-  // Generate entity functions as extension functions
-  var funcs := e.functions;
-  for(f in funcs order by f.name) {
-    code := code + "\n\n" + generateEntityFunction(e, f);
-  }
-  
   return code;
 }
 
@@ -511,21 +317,5 @@ function generateRelationship(r : Relationship) : String {
   }
   
   code := code + "\n";
-  return code;
-}
-
-function generateEntityFunction(e : DomainEntity, f : EntityFunction) : String {
-  var code := "extend entity " + e.name + " {\n";
-  code := code + "  function " + f.name + "()";
-  
-  if(f.returnType != "") {
-    code := code + " : " + f.returnType;
-  }
-  
-  code := code + " {\n";
-  code := code + "    " + f.body + "\n";
-  code := code + "  }\n";
-  code := code + "}";
-  
   return code;
 }

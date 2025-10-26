@@ -1,10 +1,4 @@
-
-entity DerivedProperty {
-  expression : String
-  name : String
-  propertyType : String
-  entity -> DomainEntity
-}
+application metamodel
 
 entity DomainApp {
   name : String
@@ -14,18 +8,8 @@ entity DomainApp {
 entity DomainEntity {
   name : String
   application -> DomainApp
-  derivedProperties : {DerivedProperty} (inverse = entity)
-  functions : {EntityFunction} (inverse = entity)
   properties : {EntityProperty} (inverse = entity)
   relationships : {Relationship} (inverse = sourceEntity)
-  validationRules : {ValidationRule} (inverse = entity)
-}
-
-entity EntityFunction {
-  body : String
-  name : String
-  returnType : String
-  entity -> DomainEntity
 }
 
 entity EntityProperty {
@@ -42,29 +26,16 @@ entity Relationship {
   targetEntity -> DomainEntity
 }
 
-entity ValidationRule {
-  expression : String
-  message : String
-  name : String
-  entity -> DomainEntity
-}
-
-derive CRUD DerivedProperty
 derive CRUD DomainApp
 derive CRUD DomainEntity
-derive CRUD EntityFunction
 derive CRUD EntityProperty
 derive CRUD Relationship
-derive CRUD ValidationRule
 
 page root() {
   title { "metamodel" }
   header { "Welcome" }
-  par { navigate manageDerivedProperty() { "Manage DerivedPropertys" } }
   par { navigate manageDomainApp() { "Manage DomainApps" } }
   par { navigate manageDomainEntity() { "Manage DomainEntitys" } }
-  par { navigate manageEntityFunction() { "Manage EntityFunctions" } }
   par { navigate manageEntityProperty() { "Manage EntityPropertys" } }
   par { navigate manageRelationship() { "Manage Relationships" } }
-  par { navigate manageValidationRule() { "Manage ValidationRules" } }
 }

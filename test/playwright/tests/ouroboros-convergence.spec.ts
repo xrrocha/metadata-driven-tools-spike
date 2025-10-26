@@ -34,9 +34,9 @@ test.describe('Ouroboros Metamodel Convergence', () => {
 
   test('should display root page correctly', async ({ page }) => {
     // Check navigation links
-    await expect(page.getByRole('link', { name: 'Manage Applications' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Manage Entities' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Manage Properties' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage DomainApps' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage DomainEntitys' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage EntityPropertys' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Manage Relationships' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Generate Code' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Bootstrap Metamodel (Self-Description)' })).toBeVisible();
@@ -68,7 +68,7 @@ test.describe('Ouroboros Metamodel Convergence', () => {
     await page.goto(BASE_URL);
 
     // Verify data was created - check entities exist
-    await page.getByRole('link', { name: 'Manage Entities' }).click();
+    await page.getByRole('link', { name: 'Manage DomainEntitys' }).click();
 
     // WebDSL CRUD pages use <list> not <table>
     // Check that entity names appear on the page
@@ -79,7 +79,7 @@ test.describe('Ouroboros Metamodel Convergence', () => {
   });
 
   test('should verify properties were created', async ({ page }) => {
-    await page.getByRole('link', { name: 'Manage Properties' }).click();
+    await page.getByRole('link', { name: 'Manage EntityPropertys' }).click();
 
     // Verify some key properties exist (WebDSL uses <list> not <table>)
     // Multiple "name" properties exist, so use .first()
