@@ -106,15 +106,24 @@ derive CRUD Relationship
 derive CRUD ValidationRule
 
 page root() {
-  title { "metamodel" }
-  header { "Welcome" }
+  title { "Ouroboros Metamodel" }
+  header { "WebDSL Modeling Itself" }
+  par { "Model WebDSL applications as data, then generate code." }
+  header { "Phase 1: Structural" }
+  par { navigate manageDomainApp() { "Manage Applications" } }
+  par { navigate manageDomainEntity() { "Manage Entities" } }
+  par { navigate manageEntityProperty() { "Manage Properties" } }
+  par { navigate manageRelationship() { "Manage Relationships" } }
+  header { "Phase 2: Behavioral" }
+  par { navigate manageValidationRule() { "Manage ValidationRules" } }
   par { navigate manageDerivedProperty() { "Manage DerivedPropertys" } }
-  par { navigate manageDomainApp() { "Manage DomainApps" } }
-  par { navigate manageDomainEntity() { "Manage DomainEntitys" } }
   par { navigate manageEntityFunction() { "Manage EntityFunctions" } }
-  par { navigate manageEntityProperty() { "Manage EntityPropertys" } }
+  header { "Phase 3: UI/Pages" }
   par { navigate managePage() { "Manage Pages" } }
   par { navigate managePageElement() { "Manage PageElements" } }
-  par { navigate manageRelationship() { "Manage Relationships" } }
-  par { navigate manageValidationRule() { "Manage ValidationRules" } }
-}</body></html>
+  header { "Actions" }
+  par { navigate codeGenerator() { "Generate Code" } }
+  par { navigate bootstrapPage() { "Bootstrap Metamodel (Self-Description)" } }
+}
+
+</body></html>

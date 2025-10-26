@@ -639,6 +639,211 @@ page bootstrapPage() {
       body := "for(e in entities) { if(e.name == name) { return e; } } return null;",
       entity := entApp
     };
+// Phase 6: Model the root page as data!
+// =======================================
+
+// Create Page record for root page
+var pageRoot := Page {
+  name := "root",
+  application := theApp
+};
+pageRoot.save();
+
+// Page Elements (in order)
+// ------------------------
+
+// 0: title
+var elem0 := PageElement {
+  elementType := "title",
+  content := "Ouroboros Metamodel",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 0
+};
+elem0.save();
+
+// 1: header - main
+var elem1 := PageElement {
+  elementType := "header",
+  content := "WebDSL Modeling Itself",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 1
+};
+elem1.save();
+
+// 2: par - description
+var elem2 := PageElement {
+  elementType := "par",
+  content := "Model WebDSL applications as data, then generate code.",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 2
+};
+elem2.save();
+
+// 3: header - Phase 1
+var elem3 := PageElement {
+  elementType := "header",
+  content := "Phase 1: Structural",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 3
+};
+elem3.save();
+
+// 4-7: Phase 1 navigation links
+var elem4 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageDomainApp",
+  navigateLabel := "Manage Applications",
+  page := pageRoot,
+  orderIndex := 4
+};
+elem4.save();
+
+var elem5 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageDomainEntity",
+  navigateLabel := "Manage Entities",
+  page := pageRoot,
+  orderIndex := 5
+};
+elem5.save();
+
+var elem6 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageEntityProperty",
+  navigateLabel := "Manage Properties",
+  page := pageRoot,
+  orderIndex := 6
+};
+elem6.save();
+
+var elem7 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageRelationship",
+  navigateLabel := "Manage Relationships",
+  page := pageRoot,
+  orderIndex := 7
+};
+elem7.save();
+
+// 8: header - Phase 2
+var elem8 := PageElement {
+  elementType := "header",
+  content := "Phase 2: Behavioral",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 8
+};
+elem8.save();
+
+// 9-11: Phase 2 navigation links
+var elem9 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageValidationRule",
+  navigateLabel := "Manage ValidationRules",
+  page := pageRoot,
+  orderIndex := 9
+};
+elem9.save();
+
+var elem10 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageDerivedProperty",
+  navigateLabel := "Manage DerivedPropertys",
+  page := pageRoot,
+  orderIndex := 10
+};
+elem10.save();
+
+var elem11 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "manageEntityFunction",
+  navigateLabel := "Manage EntityFunctions",
+  page := pageRoot,
+  orderIndex := 11
+};
+elem11.save();
+
+// 12: header - Phase 3
+var elem12 := PageElement {
+  elementType := "header",
+  content := "Phase 3: UI/Pages",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 12
+};
+elem12.save();
+
+// 13-14: Phase 3 navigation links
+var elem13 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "managePage",
+  navigateLabel := "Manage Pages",
+  page := pageRoot,
+  orderIndex := 13
+};
+elem13.save();
+
+var elem14 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "managePageElement",
+  navigateLabel := "Manage PageElements",
+  page := pageRoot,
+  orderIndex := 14
+};
+elem14.save();
+
+// 15: header - Actions
+var elem15 := PageElement {
+  elementType := "header",
+  content := "Actions",
+  navigateTarget := "",
+  navigateLabel := "",
+  page := pageRoot,
+  orderIndex := 15
+};
+elem15.save();
+
+// 16-17: Action navigation links
+var elem16 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "codeGenerator",
+  navigateLabel := "Generate Code",
+  page := pageRoot,
+  orderIndex := 16
+};
+elem16.save();
+
+var elem17 := PageElement {
+  elementType := "navigate",
+  content := "",
+  navigateTarget := "bootstrapPage",
+  navigateLabel := "Bootstrap Metamodel (Self-Description)",
+  page := pageRoot,
+  orderIndex := 17
+};
+elem17.save();
+
+// Total: 18 PageElements modeling the root page!
     funcAppGetEntity.save();
     return root();
   }
