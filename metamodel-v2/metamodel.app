@@ -1,3 +1,5 @@
+application metamodel
+
 
 entity DerivedProperty {
   expression : String
@@ -8,18 +10,42 @@ entity DerivedProperty {
 
 entity DomainApp {
   name : String
+  derive entityCount : Int = entities.length
   entities : {DomainEntity} (inverse = application)
   pages : {Page} (inverse = application)
+  validate(name != "", "Application name is required")
+}
+
+extend entity DomainApp {
+  function getEntityByName() : DomainEntity {
+    for(e in entities) { if(e.name == name) { return e; } } return null;
+  }
 }
 
 entity DomainEntity {
   name : String
+  derive propertyCount : Int = properties.length
+  derive relationshipCount : Int = relationships.length
+  derive validationRuleCount : Int = validationRules.length
   application -> DomainApp
   derivedProperties : {DerivedProperty} (inverse = entity)
   functions : {EntityFunction} (inverse = entity)
   properties : {EntityProperty} (inverse = entity)
   relationships : {Relationship} (inverse = sourceEntity)
   validationRules : {ValidationRule} (inverse = entity)
+  validate(name != "", "Entity name is required")
+}
+
+extend entity DomainEntity {
+  function displayName() : String {
+    return "Entity: " + name;
+  }
+}
+
+extend entity DomainEntity {
+  function hasProperties() : Bool {
+    return properties.length > 0;
+  }
 }
 
 entity EntityFunction {
@@ -33,10 +59,13 @@ entity EntityProperty {
   name : String
   propertyType : String
   entity -> DomainEntity
+  validate(name != "", "Property name is required")
+  validate(propertyType != "", "Property type is required")
 }
 
 entity Page {
   name : String
+  derive elementCount : Int = elements.length
   application -> DomainApp
   elements : {PageElement} (inverse = page)
 }
@@ -56,6 +85,7 @@ entity Relationship {
   relationshipType : String
   sourceEntity -> DomainEntity
   targetEntity -> DomainEntity
+  validate(name != "", "Relationship name is required")
 }
 
 entity ValidationRule {
@@ -87,4 +117,4 @@ page root() {
   par { navigate managePageElement() { "Manage PageElements" } }
   par { navigate manageRelationship() { "Manage Relationships" } }
   par { navigate manageValidationRule() { "Manage ValidationRules" } }
-}
+}</body></html>

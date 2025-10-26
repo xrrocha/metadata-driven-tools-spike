@@ -29,15 +29,17 @@ test.describe('Ouroboros Metamodel Convergence', () => {
     await page.goto(BASE_URL);
 
     // Verify app is running
-    await expect(page.locator('h1')).toContainText('WebDSL Modeling Itself');
+    await expect(page.locator('h1').first()).toContainText('WebDSL Modeling Itself');
   });
 
   test('should display root page correctly', async ({ page }) => {
     // Check navigation links
-    await expect(page.getByRole('link', { name: 'Manage DomainApps' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Manage DomainEntitys' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Manage EntityPropertys' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage Applications' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage Entities' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage Properties' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Manage Relationships' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage ValidationRules' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage Pages' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Generate Code' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Bootstrap Metamodel (Self-Description)' })).toBeVisible();
   });
