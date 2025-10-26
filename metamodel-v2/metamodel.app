@@ -9,6 +9,7 @@ entity DerivedProperty {
 entity DomainApp {
   name : String
   entities : {DomainEntity} (inverse = application)
+  pages : {Page} (inverse = application)
 }
 
 entity DomainEntity {
@@ -34,6 +35,21 @@ entity EntityProperty {
   entity -> DomainEntity
 }
 
+entity Page {
+  name : String
+  application -> DomainApp
+  elements : {PageElement} (inverse = page)
+}
+
+entity PageElement {
+  content : String
+  elementType : String
+  navigateLabel : String
+  navigateTarget : String
+  orderIndex : Int
+  page -> Page
+}
+
 entity Relationship {
   inverseName : String
   name : String
@@ -54,6 +70,8 @@ derive CRUD DomainApp
 derive CRUD DomainEntity
 derive CRUD EntityFunction
 derive CRUD EntityProperty
+derive CRUD Page
+derive CRUD PageElement
 derive CRUD Relationship
 derive CRUD ValidationRule
 
@@ -65,6 +83,8 @@ page root() {
   par { navigate manageDomainEntity() { "Manage DomainEntitys" } }
   par { navigate manageEntityFunction() { "Manage EntityFunctions" } }
   par { navigate manageEntityProperty() { "Manage EntityPropertys" } }
+  par { navigate managePage() { "Manage Pages" } }
+  par { navigate managePageElement() { "Manage PageElements" } }
   par { navigate manageRelationship() { "Manage Relationships" } }
   par { navigate manageValidationRule() { "Manage ValidationRules" } }
 }

@@ -7,7 +7,6 @@ application metamodel
 entity DomainApp {
   name : String
   entities : {DomainEntity} (inverse = application)
-  pages : {Page} (inverse = application)  // Phase 3: UI
 }
 
 entity DomainEntity {
@@ -61,25 +60,6 @@ entity EntityFunction {
   entity -> DomainEntity
 }
 
-// =============================================================================
-// PHASE 3: UI/PAGES ENTITIES
-// =============================================================================
-
-entity Page {
-  name : String
-  application -> DomainApp
-  elements : {PageElement} (inverse = page)
-}
-
-entity PageElement {
-  elementType : String  // "title", "header", "par", "navigate"
-  content : String      // Text content
-  navigateTarget : String  // Page name for navigate elements
-  navigateLabel : String   // Link text for navigate elements
-  page -> Page
-  orderIndex : Int      // For ordering elements
-}
-
 // Generate CRUD for all entities
 derive CRUD DomainApp
 derive CRUD DomainEntity
@@ -88,8 +68,6 @@ derive CRUD Relationship
 derive CRUD ValidationRule
 derive CRUD DerivedProperty
 derive CRUD EntityFunction
-derive CRUD Page
-derive CRUD PageElement
 
 // =============================================================================
 // ROOT PAGE
@@ -113,10 +91,6 @@ page root() {
   par { navigate manageDerivedProperty() { "Manage DerivedPropertys" } }
   par { navigate manageEntityFunction() { "Manage EntityFunctions" } }
   
-  header { "Phase 3: UI/Pages" }
-  par { navigate managePage() { "Manage Pages" } }
-  par { navigate managePageElement() { "Manage PageElements" } }
-  
   header { "Actions" }
   par { navigate codeGenerator() { "Generate Code" } }
   par { navigate bootstrapPage() { "Bootstrap Metamodel (Self-Description)" } }
@@ -131,7 +105,7 @@ page bootstrapPage() {
   
   header { "Bootstrap Self-Describing Data" }
   
-  par { "This will create entities that describe the metamodel itself (Phase 1 + Phase 2 + Phase 3)." }
+  par { "This will create entities that describe the metamodel itself (Phase 1 + Phase 2)." }
   
   var apps := DomainApp.all()
   if(apps.length > 0) {
@@ -173,13 +147,6 @@ page bootstrapPage() {
     
     var entFunction := DomainEntity { name := "EntityFunction", application := theApp };
     entFunction.save();
-    
-    // Create Entities (Phase 3)
-    var entPage := DomainEntity { name := "Page", application := theApp };
-    entPage.save();
-    
-    var entPageElement := DomainEntity { name := "PageElement", application := theApp };
-    entPageElement.save();
     
     // Properties for DomainApp
     var propAppName := EntityProperty { 
@@ -300,50 +267,6 @@ page bootstrapPage() {
     };
     propFuncBody.save();
     
-    // Properties for Page (Phase 3)
-    var propPageName := EntityProperty {
-      name := "name",
-      propertyType := "String",
-      entity := entPage
-    };
-    propPageName.save();
-    
-    // Properties for PageElement (Phase 3)
-    var propElemType := EntityProperty {
-      name := "elementType",
-      propertyType := "String",
-      entity := entPageElement
-    };
-    propElemType.save();
-    
-    var propElemContent := EntityProperty {
-      name := "content",
-      propertyType := "String",
-      entity := entPageElement
-    };
-    propElemContent.save();
-    
-    var propElemNavTarget := EntityProperty {
-      name := "navigateTarget",
-      propertyType := "String",
-      entity := entPageElement
-    };
-    propElemNavTarget.save();
-    
-    var propElemNavLabel := EntityProperty {
-      name := "navigateLabel",
-      propertyType := "String",
-      entity := entPageElement
-    };
-    propElemNavLabel.save();
-    
-    var propElemOrder := EntityProperty {
-      name := "orderIndex",
-      propertyType := "Int",
-      entity := entPageElement
-    };
-    propElemOrder.save();
-    
     // Relationships for DomainApp
     var relAppEntities := Relationship {
       name := "entities",
@@ -353,16 +276,6 @@ page bootstrapPage() {
       inverseName := "application"
     };
     relAppEntities.save();
-    
-    // Phase 3: DomainApp -> Page relationship
-    var relAppPages := Relationship {
-      name := "pages",
-      relationshipType := "collection",
-      sourceEntity := entApp,
-      targetEntity := entPage,
-      inverseName := "application"
-    };
-    relAppPages.save();
     
     // Relationships for DomainEntity
     var relEntityApp := Relationship {
@@ -479,35 +392,6 @@ page bootstrapPage() {
     };
     relFuncEntity.save();
     
-    // Relationships for Page (Phase 3)
-    var relPageApp := Relationship {
-      name := "application",
-      relationshipType := "reference",
-      sourceEntity := entPage,
-      targetEntity := entApp,
-      inverseName := ""
-    };
-    relPageApp.save();
-    
-    var relPageElements := Relationship {
-      name := "elements",
-      relationshipType := "collection",
-      sourceEntity := entPage,
-      targetEntity := entPageElement,
-      inverseName := "page"
-    };
-    relPageElements.save();
-    
-    // Relationships for PageElement (Phase 3)
-    var relElemPage := Relationship {
-      name := "page",
-      relationshipType := "reference",
-      sourceEntity := entPageElement,
-      targetEntity := entPage,
-      inverseName := ""
-    };
-    relElemPage.save();
-    
     return root();
   }
 }
@@ -561,23 +445,13 @@ function generateApp(theApp : DomainApp) : String {
     code := code + "derive CRUD " + e.name + "\n";
   }
   
-  // Phase 3: Generate pages from data
-  var pages := theApp.pages;
-  if(pages.length > 0) {
-    code := code + "\n";
-    for(p in pages order by p.name) {
-      code := code + generatePage(p) + "\n\n";
-    }
-  } else {
-    // Fallback: generate default root page
-    code := code + "\npage root() {\n";
-    code := code + "  title { \"" + theApp.name + "\" }\n";
-    code := code + "  header { \"Welcome\" }\n";
-    for(e in ents order by e.name) {
-      code := code + "  par { navigate manage" + e.name + "() { \"Manage " + e.name + "s\" } }\n";
-    }
-    code := code + "}";
+  code := code + "\npage root() {\n";
+  code := code + "  title { \"" + theApp.name + "\" }\n";
+  code := code + "  header { \"Welcome\" }\n";
+  for(e in ents order by e.name) {
+    code := code + "  par { navigate manage" + e.name + "() { \"Manage " + e.name + "s\" } }\n";
   }
+  code := code + "}";
   
   return code;
 }
@@ -652,35 +526,6 @@ function generateEntityFunction(e : DomainEntity, f : EntityFunction) : String {
   code := code + "    " + f.body + "\n";
   code := code + "  }\n";
   code := code + "}";
-  
-  return code;
-}
-
-// Phase 3: Page generator
-function generatePage(p : Page) : String {
-  var code := "page " + p.name + "() {\n";
-  
-  var elems := p.elements;
-  for(elem in elems order by elem.orderIndex) {
-    code := code + generatePageElement(elem);
-  }
-  
-  code := code + "}";
-  return code;
-}
-
-function generatePageElement(elem : PageElement) : String {
-  var code := "";
-  
-  if(elem.elementType == "title") {
-    code := "  title { \"" + elem.content + "\" }\n";
-  } else if(elem.elementType == "header") {
-    code := "  header { \"" + elem.content + "\" }\n";
-  } else if(elem.elementType == "par") {
-    code := "  par { \"" + elem.content + "\" }\n";
-  } else if(elem.elementType == "navigate") {
-    code := "  par { navigate " + elem.navigateTarget + "() { \"" + elem.navigateLabel + "\" } }\n";
-  }
   
   return code;
 }
