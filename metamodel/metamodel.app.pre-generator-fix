@@ -886,14 +886,6 @@ page viewGeneratedCode(theApp : DomainApp) {
 // GENERATORS
 // =============================================================================
 
-// Helper function to capitalize first letter
-function capitalize(s : String) : String {
-  if(s.length() == 0) {
-    return s;
-  }
-  return s.substring(0, 1).toUpperCase() + s.substring(1);
-}
-
 function generateApp(theApp : DomainApp) : String {
   var code := "application " + theApp.name + "\n\n";
   
@@ -903,7 +895,7 @@ function generateApp(theApp : DomainApp) : String {
   }
   
   for(e in ents order by e.name) {
-    code := code + "derive CRUD " + capitalize(e.name) + "\n";
+    code := code + "derive CRUD " + e.name + "\n";
   }
   
   // Phase 3: Generate pages from data
@@ -919,7 +911,7 @@ function generateApp(theApp : DomainApp) : String {
     code := code + "  title { \"" + theApp.name + "\" }\n";
     code := code + "  header { \"Welcome\" }\n";
     for(e in ents order by e.name) {
-      code := code + "  par { navigate manage" + capitalize(e.name) + "() { \"Manage " + e.name + "s\" } }\n";
+      code := code + "  par { navigate manage" + e.name + "() { \"Manage " + e.name + "s\" } }\n";
     }
     code := code + "}";
   }
@@ -928,18 +920,18 @@ function generateApp(theApp : DomainApp) : String {
 }
 
 function generateEntity(e : DomainEntity) : String {
-  var code := "entity " + capitalize(e.name) + " {\n";
+  var code := "entity " + e.name + " {\n";
   
   // Generate properties first
   var props := e.properties;
   for(p in props order by p.name) {
-    code := code + "  " + p.name + " : " + capitalize(p.propertyType) + "\n";
+    code := code + "  " + p.name + " : " + p.propertyType + "\n";
   }
   
   // Generate derived properties
   var derivedProps := e.derivedProperties;
   for(dp in derivedProps order by dp.name) {
-    code := code + "  derive " + dp.name + " : " + capitalize(dp.propertyType) + " = " + dp.expression + "\n";
+    code := code + "  derive " + dp.name + " : " + dp.propertyType + " = " + dp.expression + "\n";
   }
   
   // Generate relationships
@@ -967,17 +959,13 @@ function generateEntity(e : DomainEntity) : String {
 
 function generateRelationship(r : Relationship) : String {
   var code := "  " + r.name + " ";
-  var targetName := capitalize(r.targetEntity.name);
   
-  // Map relationship types (support both old and new notation)
-  if(r.relationshipType == "reference" || r.relationshipType == "1:1" || r.relationshipType == "M:1") {
-    code := code + "-> " + targetName;
-  } else if(r.relationshipType == "collection" || r.relationshipType == "1:M") {
-    code := code + ": {" + targetName + "}";
+  if(r.relationshipType == "reference") {
+    code := code + "-> " + r.targetEntity.name;
+  } else if(r.relationshipType == "collection") {
+    code := code + ": {" + r.targetEntity.name + "}";
   } else if(r.relationshipType == "list") {
-    code := code + ": [" + targetName + "]";
-  } else if(r.relationshipType == "M:N") {
-    code := code + ": {" + targetName + "}";
+    code := code + ": [" + r.targetEntity.name + "]";
   }
   
   // Add inverse if bidirectional
@@ -990,11 +978,11 @@ function generateRelationship(r : Relationship) : String {
 }
 
 function generateEntityFunction(e : DomainEntity, f : EntityFunction) : String {
-  var code := "extend entity " + capitalize(e.name) + " {\n";
+  var code := "extend entity " + e.name + " {\n";
   code := code + "  function " + f.name + "()";
   
   if(f.returnType != "") {
-    code := code + " : " + capitalize(f.returnType);
+    code := code + " : " + f.returnType;
   }
   
   code := code + " {\n";
