@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo "Be sure to run this script as root."
+if [ $# -eq "0" ]; then
+   echo "Removing old index."
+   rm -rf @INDEXDIR@/@APPNAME@
+fi
+echo "Creating new index, this may take a while."
+ant reindex -Dentities="$*"
+chmod -R 777 @INDEXDIR@/@APPNAME@
+echo "Done."

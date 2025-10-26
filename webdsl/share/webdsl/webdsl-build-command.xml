@@ -1,0 +1,209 @@
+<project name="webdsl-build-command" default="command">
+
+  <taskdef name="taskbuildoptions" classname="org.webdsl.ant.TaskBuildOptions"/>
+
+  <target name="command">
+    <!-- command-line builds use .servletapp, plugin uses WebContent -->
+    <property name="generate-dir" value=".servletapp"/>
+
+    <if>
+      <or>
+        <equals arg1="${buildoptions}" arg2="$${buildoptions}"/>
+        <equals arg1="${buildoptions}" arg2=""/>
+      </or>
+      <then>
+        <antcall target="help"/>
+      </then>
+      <else>
+        <taskbuildoptions/>
+        <fail unless="command0"/>
+        <if>
+          <or>
+            <equals arg1="${command0}" arg2="test"/>
+          	<equals arg1="${command0}" arg2="test-ng"/>
+            <equals arg1="${command0}" arg2="test-web"/>
+          	<equals arg1="${command0}" arg2="test-web-ng"/>
+            <equals arg1="${command0}" arg2="test-web-twice"/>
+          	<equals arg1="${command0}" arg2="test-web-twice-ng"/>
+            <and>
+              <equals arg1="${command0}" arg2="run"/>
+              <not><equals arg1="${command1}" arg2="$${command1}"/></not>
+            </and>
+          </or>
+          <then>
+            <fail unless="command1"/>
+            <!-- try to remove .app -->
+            <propertyregex property="command1"
+                          input="${command1}"
+                          regexp=".app$"
+                          replace=""
+                          override="true" />
+            <available file="${currentdir}/${command1}.app" property="appfile.present"/>
+            <fail unless="appfile.present" message="${command1}.app not found"/>
+            <!--antcall target="clean-all"/-->
+            <echo file="${currentdir}/application.ini">backend=servlet
+tomcatpath=/dev/null
+appname=${command1}
+db=h2mem
+dbfile=${currentdir}/temp_test.db
+indexdir=index
+dbmode=create-drop
+httpport=8080
+httpsport=8443
+wikitext-anchors=true
+</echo>
+            <if>
+              <or>
+    	        <equals arg1="${command0}" arg2="test-ng"/>
+                <equals arg1="${command0}" arg2="test-web-ng"/>
+                <equals arg1="${command0}" arg2="test-web-twice-ng"/>
+	          </or>
+              <then>
+                <echo file="${currentdir}/application.ini" append="true">usecompileserver=true</echo>
+              	<propertyregex property="command0"
+                               input="${command0}"
+                               regexp="-ng$"
+                               replace=""
+   	                           override="true"/>
+              </then>
+            </if>
+            <echo file="${currentdir}/temp_test.db"></echo>
+            <property name="passtestoption" value="--test" />
+            <if>
+              <equals arg1="${command0}" arg2="test-web"/>
+              <then>
+                <antcall target="check-web"/>
+              </then>
+            </if>
+            <if>
+              <equals arg1="${command0}" arg2="test-web-twice"/>
+              <then>
+                <echo message="---------------starting first build + test---------------"/>
+                <antcall target="check-web"/>
+                <echo message="---------------finished first build + test, now starting cached build + test---------------"/>
+                <antcall target="check-web"/>
+                <echo message="---------------finished cached build + test---------------"/>
+              </then>
+            </if>
+            <if>
+              <equals arg1="${command0}" arg2="test"/>
+              <then>
+                <antcall target="check"/>
+              </then>
+            </if>
+            <if>
+              <equals arg1="${command0}" arg2="retest"/>
+              <then>
+                <antcall target="recheck"/>
+              </then>
+            </if>
+            <if>
+              <equals arg1="${command0}" arg2="run"/>
+              <then>
+                <antcall target="run"/>
+              </then>
+            </if>
+          </then>
+          <else>
+            <!-- non-test commands -->
+            <foreach list="${buildoptions}" delimiter=" " target="do-command" param="command"/>
+          </else>
+        </if>
+        <printFinishTimestamp tasks="${buildoptions}" />
+      </else>
+    </if>
+  </target>
+
+  <macrodef name="printFinishTimestamp">
+    <attribute name="tasks" default="None"/>
+    <sequential>
+      <var name="current.time" unset="true"/>
+         <tstamp>
+            <format property="current.time" pattern="yyyy-MM-dd HH:mm:ss" />
+         </tstamp>
+         <echo message="FINISHED TASKS: `@{tasks}` at ${current.time}" />
+    </sequential>
+  </macrodef>
+
+  <target name="do-command">
+    <!-- foreach task doesn't pass properties... -->
+    <property name="generate-dir" value=".servletapp"/>
+
+    <switch value="${command}">
+      <case value="war"><antcall target="create-war-file"/></case>
+      <case value="deploy"><antcall target="deploy"/></case>
+      <case value="undeploy"><antcall target="undeploy"/></case>
+      <case value="tomcatdeploy"><antcall target="tomcatdeploy"/></case>
+      <case value="tomcatundeploy"><antcall target="tomcatundeploy"/></case>
+      <case value="start"><antcall target="start-compiler-server"/></case>
+      <case value="new"><antcall target="new"/></case>
+      <case value="clean"><antcall target="clean"/></case>
+      <case value="cleanall"><antcall target="clean-all"/></case>
+      <case value="build"><antcall target="build"/></case>
+      <case value="check"><antcall target="check"/></case>
+    	<case value="recheck"><antcall target="recheck"/></case>
+      <case value="check-web"><antcall target="check-web"/></case>
+      <case value="run"><antcall target="run"/></case>
+      <case value="typecheck"><antcall target="typecheck"/></case>
+      <case value="reindex"><antcall target="reindex"/></case>
+      <case value="rebuild"><antcall target="rebuild"/></case>
+      <case value="rebuilddeploy"><antcall target="rebuilddeploy"/></case>
+      <case value="stats"><antcall target="stats"/></case>
+      <case value="version"><antcall target="version"/></case>
+      <case value="help"><antcall target="help"/></case>
+      <default>
+        <echo message="Not a valid command: ${command}" />
+        <antcall target="help"/>
+      </default>
+    </switch>
+  </target>
+<!--
+      "run" )
+         load_config
+         if [ ! -e "$PYTHONPROJECTDIR" ]
+         then
+           make_app
+         fi
+         if [ "$DBMODE" == "create-drop" ]; then
+           APPSWITCH="-c"
+         else
+           APPSWITCH=""
+         fi
+         dev_appserver.py $APPSWITCH $PYTHONPROJECTDIR
+         ;;
+      "code" )
+         make_app_code
+         if [ "$BACKEND" == "seam" ]; then
+           echo "Done, result is in $SEAMPROJECTDIR."
+         fi
+         ;;
+      "analyze" )
+         load_config
+         $prefix/bin/webdslc -i $APPNAME.app - -analysis - -no-generation > /dev/null
+         ;;
+      "convert-to-unicode" )
+         load_config
+         echo "note: the specified database username in application.ini needs read permission on the 'information_schema' database in mysql"
+         echo "select t.table_name, c.column_name from tables t, columns c where t.table_schema = '$DBNAME' and t.table_schema=c.table_schema and t.table_name=c.table_name and column_type = 'varchar(16)';" \
+         | mysql -u$DBUSER -p$DBPASSWORD information_schema > .servletapp/mysqloutput.tmp # 2> /dev/null
+         if [ "$?" == 0 ]
+         then
+           echo "mysql query to retrieve id columns succeeded"
+           echo "select t.table_name, c.column_name, c.column_type from tables t, columns c where t.table_schema = '$DBNAME' and t.table_schema=c.table_schema and t.table_name=c.table_name and (data_type = 'varchar' or data_type = 'longtext');" \
+           | mysql -u$DBUSER -p$DBPASSWORD information_schema > .servletapp/mysqloutput2.tmp # 2> /dev/null
+           if [ "$?" == 0 ]
+           then
+             echo "mysql query to retrieve string columns succeeded"
+             cd .servletapp
+             ant convertoldglobals
+             echo "finished converting id's"
+         fi
+         fi
+         ;;
+      "config" )
+         java -ss4m -cp $prefix/bin/strategoxt.jar:$prefix/bin/webdsl-config.jar org.webdsl.webdsl_config.Main
+         ;;
+-->
+
+
+</project>

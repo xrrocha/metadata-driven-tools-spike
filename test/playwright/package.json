@@ -1,0 +1,28 @@
+{
+  "name": "webdsl-ouroboros-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end tests for WebDSL Ouroboros metamodel convergence",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:convergence": "playwright test tests/ouroboros-convergence.spec.ts",
+    "show-report": "playwright show-report"
+  },
+  "keywords": [
+    "webdsl",
+    "ouroboros",
+    "metamodel",
+    "e2e",
+    "playwright"
+  ],
+  "author": "Ricardo Rocha",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3"
+  }
+}
