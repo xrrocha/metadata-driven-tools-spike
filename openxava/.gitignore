@@ -1,0 +1,21 @@
+# Maven build artifacts
+target/
+temp/
+
+# HSQLDB database files
+data/
+*.lck
+*.log
+*.properties
+*.script
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db

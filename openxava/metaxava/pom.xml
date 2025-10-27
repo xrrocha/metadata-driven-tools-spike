@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.metaxava</groupId>
+	<artifactId>metaxava</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>war</packaging>
+
+	<properties>
+		<openxava.version>7.6</openxava.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!--
+		MetaXava Generator Strategy:
+		- Generator itself: Java 25 (modern features for development)
+		- Generated code: Configurable target (Java 8/11/17/21/25)
+
+		This project IS the generator, so we use Java 25 to leverage:
+		- Records for immutable data
+		- Pattern matching for type discrimination
+		- Text blocks for code generation templates
+		- Enhanced switch expressions
+		- Sealed types for type hierarchies
+
+		The CODE we GENERATE will target whatever version the user needs.
+		-->
+		<maven.compiler.source>25</maven.compiler.source>
+		<maven.compiler.target>25</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.openxava</groupId>
+			<artifactId>openxava</artifactId>
+			<version>${openxava.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>metaxava</finalName>
+		<plugins>
+
+			<!-- Required for Java 25 with Lombok -->
+	        <plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-compiler-plugin</artifactId>
+	            <version>3.12.0</version>
+	            <configuration>
+	                <source>${maven.compiler.source}</source>
+	                <target>${maven.compiler.target}</target>
+	                <encoding>${project.build.sourceEncoding}</encoding>
+	                <annotationProcessorPaths>
+	                    <path>
+	                        <groupId>org.projectlombok</groupId>
+	                        <artifactId>lombok</artifactId>
+	                        <version>1.18.40</version>
+	                    </path>
+	                </annotationProcessorPaths>
+	            </configuration>
+	        </plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack</id>
+						<phase>package</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.openxava</groupId>
+									<artifactId>openxava</artifactId>
+									<version>${openxava.version}</version>
+									<outputDirectory>src/main/resources</outputDirectory>
+									<includes>xava/dtds/*</includes>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.2</version>
+				<configuration>
+					<packagingExcludes>WEB-INF/lib/ecj-3*.jar,
+						WEB-INF/lib/fontbox-*.jar,
+						WEB-INF/lib/htmlunit-*.jar,
+						WEB-INF/lib/httpclient-*.jar,
+						WEB-INF/lib/httpcore-*.jar,
+						WEB-INF/lib/httpmime-*.jar,
+						WEB-INF/lib/jetty-*.jar,
+						WEB-INF/lib/junit-*.jar,
+						WEB-INF/lib/neko-htmlunit-*.jar,
+						WEB-INF/lib/pdfbox-*.jar,
+						WEB-INF/lib/serializer-*.jar,
+						WEB-INF/lib/tomcat-*.jar,
+						WEB-INF/lib/websocket-*.jar,
+						WEB-INF/lib/xalan-*.jar,
+						WEB-INF/lib/xercesImpl-*.jar,
+						WEB-INF/lib/xml-apis-*.jar</packagingExcludes>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
