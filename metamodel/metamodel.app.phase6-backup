@@ -510,6 +510,136 @@ page bootstrapPage() {
     };
     relElemPage.save();
     
+
+    // =========================================================================
+    // PHASE 2: CREATE VALIDATION RULES, DERIVED PROPERTIES, ENTITY FUNCTIONS
+    // =========================================================================
+
+    // Validation Rules
+    // ----------------
+
+    // DomainApp: name must not be empty
+    var valAppName := ValidationRule {
+      name := "nameNotEmpty",
+      expression := "name != \"\"",
+      message := "Application name is required",
+      entity := entApp
+    };
+    valAppName.save();
+
+    // DomainEntity: name must not be empty
+    var valEntityName := ValidationRule {
+      name := "nameNotEmpty",
+      expression := "name != \"\"",
+      message := "Entity name is required",
+      entity := entEntity
+    };
+    valEntityName.save();
+
+    // EntityProperty: name must not be empty
+    var valPropName := ValidationRule {
+      name := "nameNotEmpty",
+      expression := "name != \"\"",
+      message := "Property name is required",
+      entity := entProperty
+    };
+    valPropName.save();
+
+    // EntityProperty: propertyType must not be empty
+    var valPropType := ValidationRule {
+      name := "typeNotEmpty",
+      expression := "propertyType != \"\"",
+      message := "Property type is required",
+      entity := entProperty
+    };
+    valPropType.save();
+
+    // Relationship: name must not be empty
+    var valRelName := ValidationRule {
+      name := "nameNotEmpty",
+      expression := "name != \"\"",
+      message := "Relationship name is required",
+      entity := entRelationship
+    };
+    valRelName.save();
+
+    // Derived Properties
+    // ------------------
+
+    // DomainEntity: count properties
+    var derEntityPropCount := DerivedProperty {
+      name := "propertyCount",
+      propertyType := "Int",
+      expression := "properties.length",
+      entity := entEntity
+    };
+    derEntityPropCount.save();
+
+    // DomainEntity: count relationships
+    var derEntityRelCount := DerivedProperty {
+      name := "relationshipCount",
+      propertyType := "Int",
+      expression := "relationships.length",
+      entity := entEntity
+    };
+    derEntityRelCount.save();
+
+    // DomainEntity: count validation rules
+    var derEntityValCount := DerivedProperty {
+      name := "validationRuleCount",
+      propertyType := "Int",
+      expression := "validationRules.length",
+      entity := entEntity
+    };
+    derEntityValCount.save();
+
+    // DomainApp: count entities
+    var derAppEntityCount := DerivedProperty {
+      name := "entityCount",
+      propertyType := "Int",
+      expression := "entities.length",
+      entity := entApp
+    };
+    derAppEntityCount.save();
+
+    // Page: count elements
+    var derPageElemCount := DerivedProperty {
+      name := "elementCount",
+      propertyType := "Int",
+      expression := "elements.length",
+      entity := entPage
+    };
+    derPageElemCount.save();
+
+    // Entity Functions
+    // ----------------
+
+    // DomainEntity: display name with prefix
+    var funcEntityDisplay := EntityFunction {
+      name := "displayName",
+      returnType := "String",
+      body := "return \"Entity: \" + name;",
+      entity := entEntity
+    };
+    funcEntityDisplay.save();
+
+    // DomainEntity: check if entity has properties
+    var funcEntityHasProps := EntityFunction {
+      name := "hasProperties",
+      returnType := "Bool",
+      body := "return properties.length > 0;",
+      entity := entEntity
+    };
+    funcEntityHasProps.save();
+
+    // DomainApp: get entity by name
+    var funcAppGetEntity := EntityFunction {
+      name := "getEntityByName",
+      returnType := "DomainEntity",
+      body := "for(e in entities) { if(e.name == name) { return e; } } return null;",
+      entity := entApp
+    };
+    funcAppGetEntity.save();
     return root();
   }
 }
