@@ -3,6 +3,7 @@ package org.metaxava.model;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import java.sql.JDBCType;
 import java.util.List;
 
 /**
@@ -43,5 +44,15 @@ public class OXDateType extends OXBasicReferenceType {
         // java.util.Date is ambiguous without @Temporal
         // Default to TIMESTAMP (most common usage)
         return List.of("@Temporal(TemporalType.TIMESTAMP)");
+    }
+
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        return List.of(JDBCType.TIMESTAMP, JDBCType.DATE, JDBCType.TIME);
+    }
+
+    @Override
+    public JDBCType declarePreferredJdbcType() {
+        return JDBCType.TIMESTAMP;
     }
 }

@@ -3,6 +3,8 @@ package org.metaxava.model;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import java.sql.JDBCType;
+import java.util.List;
 
 /**
  * OXStringType - java.lang.String
@@ -31,5 +33,15 @@ public class OXStringType extends OXBasicReferenceType {
     @Override
     public String generateJavaType() {
         return SIMPLE_NAME;
+    }
+
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        return List.of(JDBCType.VARCHAR, JDBCType.CHAR, JDBCType.CLOB);
+    }
+
+    @Override
+    public JDBCType declarePreferredJdbcType() {
+        return JDBCType.VARCHAR;
     }
 }

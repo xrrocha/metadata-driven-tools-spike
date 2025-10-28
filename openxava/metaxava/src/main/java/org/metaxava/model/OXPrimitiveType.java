@@ -6,7 +6,9 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import javax.persistence.*;
+import java.sql.JDBCType;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * OXPrimitiveType - Java primitive types (byte, short, int, long, float, double, char, boolean)
@@ -107,5 +109,37 @@ public class OXPrimitiveType extends OXType implements OXBasicType {
     @Override
     public String generateJavaType() {
         return name;  // Generates "int", not "Integer"
+    }
+
+    // ========== OXBasicType JDBC Declaration Methods ==========
+
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        return switch (name) {
+            case "byte" -> List.of(JDBCType.TINYINT, JDBCType.SMALLINT, JDBCType.INTEGER);
+            case "short" -> List.of(JDBCType.SMALLINT, JDBCType.INTEGER, JDBCType.BIGINT);
+            case "int" -> List.of(JDBCType.INTEGER, JDBCType.BIGINT, JDBCType.SMALLINT);
+            case "long" -> List.of(JDBCType.BIGINT, JDBCType.INTEGER);
+            case "float" -> List.of(JDBCType.FLOAT, JDBCType.DOUBLE, JDBCType.NUMERIC);
+            case "double" -> List.of(JDBCType.DOUBLE, JDBCType.FLOAT, JDBCType.NUMERIC);
+            case "char" -> List.of(JDBCType.CHAR, JDBCType.VARCHAR);
+            case "boolean" -> List.of(JDBCType.BOOLEAN, JDBCType.TINYINT);
+            default -> throw new IllegalStateException("Unknown primitive type: " + name);
+        };
+    }
+
+    @Override
+    public JDBCType declarePreferredJdbcType() {
+        return switch (name) {
+            case "byte" -> JDBCType.TINYINT;
+            case "short" -> JDBCType.SMALLINT;
+            case "int" -> JDBCType.INTEGER;
+            case "long" -> JDBCType.BIGINT;
+            case "float" -> JDBCType.FLOAT;
+            case "double" -> JDBCType.DOUBLE;
+            case "char" -> JDBCType.CHAR;
+            case "boolean" -> JDBCType.BOOLEAN;
+            default -> throw new IllegalStateException("Unknown primitive type: " + name);
+        };
     }
 }

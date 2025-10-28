@@ -3,6 +3,8 @@ package org.metaxava.model;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import java.sql.JDBCType;
+import java.util.List;
 
 /**
  * OXPrimitiveWrapperType - Wrapper classes for Java primitives
@@ -53,5 +55,37 @@ public class OXPrimitiveWrapperType extends OXBasicReferenceType {
     @Override
     public String generateJavaType() {
         return getSimpleName();
+    }
+
+    // ========== OXBasicType JDBC Declaration Methods ==========
+
+    /**
+     * Delegate to primitive type - wrappers have same JDBC mappings as their primitives.
+     * Single source of truth: primitive type declarations.
+     */
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        if (getPrimitiveType() == null) {
+            throw new IllegalStateException(
+                "Cannot declare JDBC types for wrapper " + getSimpleName() +
+                " - primitiveType relationship not yet wired"
+            );
+        }
+        return getPrimitiveType().declareCompatibleJdbcTypes();
+    }
+
+    /**
+     * Delegate to primitive type - wrappers have same JDBC mappings as their primitives.
+     * Single source of truth: primitive type declarations.
+     */
+    @Override
+    public JDBCType declarePreferredJdbcType() {
+        if (getPrimitiveType() == null) {
+            throw new IllegalStateException(
+                "Cannot declare preferred JDBC type for wrapper " + getSimpleName() +
+                " - primitiveType relationship not yet wired"
+            );
+        }
+        return getPrimitiveType().declarePreferredJdbcType();
     }
 }

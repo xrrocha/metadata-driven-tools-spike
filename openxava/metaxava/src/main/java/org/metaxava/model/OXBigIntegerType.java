@@ -3,6 +3,8 @@ package org.metaxava.model;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import java.sql.JDBCType;
+import java.util.List;
 
 /**
  * OXBigIntegerType - java.math.BigInteger
@@ -31,5 +33,15 @@ public class OXBigIntegerType extends OXBasicReferenceType {
     @Override
     public String generateJavaType() {
         return SIMPLE_NAME;
+    }
+
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        return List.of(JDBCType.NUMERIC, JDBCType.DECIMAL, JDBCType.BIGINT);
+    }
+
+    @Override
+    public JDBCType declarePreferredJdbcType() {
+        return JDBCType.NUMERIC;
     }
 }

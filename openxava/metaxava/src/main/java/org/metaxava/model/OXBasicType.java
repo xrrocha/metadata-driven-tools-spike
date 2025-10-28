@@ -1,6 +1,8 @@
 package org.metaxava.model;
 
+import java.sql.JDBCType;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * OXBasicType - Cross-cutting concern for types that map to @Basic JPA properties
@@ -96,4 +98,37 @@ public interface OXBasicType {
      * @param jdbcType Preferred type (must be in compatibleJdbcTypes)
      */
     void setPreferredJdbcType(JDBCTypeMetadata jdbcType);
+
+    /**
+     * Declare compatible JDBC types for this basic type
+     *
+     * This method allows types to be self-describing about their JDBC requirements.
+     * Bootstrap resolves these declarations to actual JDBCTypeMetadata entities.
+     *
+     * Examples:
+     * - int → [JDBCType.INTEGER, JDBCType.BIGINT, JDBCType.SMALLINT]
+     * - String → [JDBCType.VARCHAR, JDBCType.CHAR, JDBCType.CLOB]
+     * - BigDecimal → [JDBCType.NUMERIC, JDBCType.DECIMAL]
+     *
+     * DESIGN RATIONALE:
+     * Rather than hardcoding JDBC mappings in bootstrap, each type declares
+     * its own requirements. Bootstrap becomes mechanical: resolve and wire.
+     *
+     * @return List of compatible JDBC types (never null, never empty)
+     */
+    List<JDBCType> declareCompatibleJdbcTypes();
+
+    /**
+     * Declare preferred JDBC type for this basic type
+     *
+     * Examples:
+     * - int → JDBCType.INTEGER
+     * - String → JDBCType.VARCHAR
+     * - BigDecimal → JDBCType.NUMERIC
+     *
+     * CONSTRAINT: Must be a member of declareCompatibleJdbcTypes()
+     *
+     * @return Preferred JDBC type (never null)
+     */
+    JDBCType declarePreferredJdbcType();
 }

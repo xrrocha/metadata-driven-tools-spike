@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * TypeSystemBootstrap - Bootstrap primitives + wrappers + JDBC types + mappings
@@ -265,82 +266,23 @@ public class TypeSystemBootstrap {
 
         int mappingsCount = 0;
 
-        // byte: 8-bit signed integer
-        mappingsCount += wirePrimitive(em, primitives.get("byte"),
-            jdbcTypes.get(JDBCType.TINYINT),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.TINYINT),
-                jdbcTypes.get(JDBCType.SMALLINT),
-                jdbcTypes.get(JDBCType.INTEGER)
-            )
-        );
+        // Wire all primitives using their declared JDBC types
+        for (OXPrimitiveType primitive : primitives.values()) {
+            List<JDBCTypeMetadata> compatible = resolveJdbcTypes(
+                primitive.declareCompatibleJdbcTypes(),
+                jdbcTypes
+            );
+            JDBCTypeMetadata preferred = jdbcTypes.get(primitive.declarePreferredJdbcType());
 
-        // short: 16-bit signed integer
-        mappingsCount += wirePrimitive(em, primitives.get("short"),
-            jdbcTypes.get(JDBCType.SMALLINT),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.SMALLINT),
-                jdbcTypes.get(JDBCType.INTEGER),
-                jdbcTypes.get(JDBCType.BIGINT)
-            )
-        );
+            primitive.setPreferredJdbcType(preferred);
+            primitive.setCompatibleJdbcTypes(compatible);
 
-        // int: 32-bit signed integer
-        mappingsCount += wirePrimitive(em, primitives.get("int"),
-            jdbcTypes.get(JDBCType.INTEGER),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.INTEGER),
-                jdbcTypes.get(JDBCType.BIGINT),
-                jdbcTypes.get(JDBCType.SMALLINT)
-            )
-        );
+            System.out.println("  → " + primitive.getName() +
+                             " → " + compatible.size() + " JDBC types" +
+                             " (preferred: " + preferred.getJdbcType() + ")");
 
-        // long: 64-bit signed integer
-        mappingsCount += wirePrimitive(em, primitives.get("long"),
-            jdbcTypes.get(JDBCType.BIGINT),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.BIGINT),
-                jdbcTypes.get(JDBCType.INTEGER)
-            )
-        );
-
-        // float: 32-bit floating point
-        mappingsCount += wirePrimitive(em, primitives.get("float"),
-            jdbcTypes.get(JDBCType.FLOAT),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.FLOAT),
-                jdbcTypes.get(JDBCType.DOUBLE),
-                jdbcTypes.get(JDBCType.NUMERIC)
-            )
-        );
-
-        // double: 64-bit floating point
-        mappingsCount += wirePrimitive(em, primitives.get("double"),
-            jdbcTypes.get(JDBCType.DOUBLE),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.DOUBLE),
-                jdbcTypes.get(JDBCType.FLOAT),
-                jdbcTypes.get(JDBCType.NUMERIC)
-            )
-        );
-
-        // char: 16-bit Unicode character
-        mappingsCount += wirePrimitive(em, primitives.get("char"),
-            jdbcTypes.get(JDBCType.CHAR),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.CHAR),
-                jdbcTypes.get(JDBCType.VARCHAR)
-            )
-        );
-
-        // boolean: true/false
-        mappingsCount += wirePrimitive(em, primitives.get("boolean"),
-            jdbcTypes.get(JDBCType.BOOLEAN),  // preferred
-            List.of(
-                jdbcTypes.get(JDBCType.BOOLEAN),
-                jdbcTypes.get(JDBCType.TINYINT)
-            )
-        );
+            mappingsCount += compatible.size();
+        }
 
         return mappingsCount;
     }
@@ -385,6 +327,24 @@ public class TypeSystemBootstrap {
     private static <T> T persist(EntityManager em, T entity) {
         em.persist(entity);
         return entity;
+    }
+
+    /**
+     * Helper: Resolve declared JDBC types to actual JDBCTypeMetadata entities
+     *
+     * Types declare their JDBC requirements as List<JDBCType> enums.
+     * This method resolves those enums to the actual persisted JDBCTypeMetadata entities.
+     *
+     * @param declaredTypes List of JDBC type enums declared by a type
+     * @param jdbcTypes Map of JDBC enums to metadata entities
+     * @return List of resolved JDBCTypeMetadata entities
+     */
+    private static List<JDBCTypeMetadata> resolveJdbcTypes(
+            List<JDBCType> declaredTypes,
+            Map<JDBCType, JDBCTypeMetadata> jdbcTypes) {
+        return declaredTypes.stream()
+            .map(jdbcTypes::get)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -458,82 +418,23 @@ public class TypeSystemBootstrap {
 
         int mappingsCount = 0;
 
-        // Byte: same as byte
-        mappingsCount += wireWrapper(wrappers.get("byte"),
-            jdbcTypes.get(JDBCType.TINYINT),
-            List.of(
-                jdbcTypes.get(JDBCType.TINYINT),
-                jdbcTypes.get(JDBCType.SMALLINT),
-                jdbcTypes.get(JDBCType.INTEGER)
-            )
-        );
+        // Wire all wrappers using their declared JDBC types
+        for (OXPrimitiveWrapperType wrapper : wrappers.values()) {
+            List<JDBCTypeMetadata> compatible = resolveJdbcTypes(
+                wrapper.declareCompatibleJdbcTypes(),
+                jdbcTypes
+            );
+            JDBCTypeMetadata preferred = jdbcTypes.get(wrapper.declarePreferredJdbcType());
 
-        // Short: same as short
-        mappingsCount += wireWrapper(wrappers.get("short"),
-            jdbcTypes.get(JDBCType.SMALLINT),
-            List.of(
-                jdbcTypes.get(JDBCType.SMALLINT),
-                jdbcTypes.get(JDBCType.INTEGER),
-                jdbcTypes.get(JDBCType.BIGINT)
-            )
-        );
+            wrapper.setPreferredJdbcType(preferred);
+            wrapper.setCompatibleJdbcTypes(compatible);
 
-        // Integer: same as int
-        mappingsCount += wireWrapper(wrappers.get("int"),
-            jdbcTypes.get(JDBCType.INTEGER),
-            List.of(
-                jdbcTypes.get(JDBCType.INTEGER),
-                jdbcTypes.get(JDBCType.BIGINT),
-                jdbcTypes.get(JDBCType.SMALLINT)
-            )
-        );
+            System.out.println("  → " + wrapper.getSimpleName() +
+                             " → " + compatible.size() + " JDBC types" +
+                             " (preferred: " + preferred.getJdbcType() + ")");
 
-        // Long: same as long
-        mappingsCount += wireWrapper(wrappers.get("long"),
-            jdbcTypes.get(JDBCType.BIGINT),
-            List.of(
-                jdbcTypes.get(JDBCType.BIGINT),
-                jdbcTypes.get(JDBCType.INTEGER)
-            )
-        );
-
-        // Float: same as float
-        mappingsCount += wireWrapper(wrappers.get("float"),
-            jdbcTypes.get(JDBCType.FLOAT),
-            List.of(
-                jdbcTypes.get(JDBCType.FLOAT),
-                jdbcTypes.get(JDBCType.DOUBLE),
-                jdbcTypes.get(JDBCType.NUMERIC)
-            )
-        );
-
-        // Double: same as double
-        mappingsCount += wireWrapper(wrappers.get("double"),
-            jdbcTypes.get(JDBCType.DOUBLE),
-            List.of(
-                jdbcTypes.get(JDBCType.DOUBLE),
-                jdbcTypes.get(JDBCType.FLOAT),
-                jdbcTypes.get(JDBCType.NUMERIC)
-            )
-        );
-
-        // Character: same as char
-        mappingsCount += wireWrapper(wrappers.get("char"),
-            jdbcTypes.get(JDBCType.CHAR),
-            List.of(
-                jdbcTypes.get(JDBCType.CHAR),
-                jdbcTypes.get(JDBCType.VARCHAR)
-            )
-        );
-
-        // Boolean: same as boolean
-        mappingsCount += wireWrapper(wrappers.get("boolean"),
-            jdbcTypes.get(JDBCType.BOOLEAN),
-            List.of(
-                jdbcTypes.get(JDBCType.BOOLEAN),
-                jdbcTypes.get(JDBCType.TINYINT)
-            )
-        );
+            mappingsCount += compatible.size();
+        }
 
         return mappingsCount;
     }
@@ -567,18 +468,19 @@ public class TypeSystemBootstrap {
         stringType.setPackageName(OXStringType.PACKAGE_NAME);
         stringType.setSimpleName(OXStringType.SIMPLE_NAME);
 
-        // String maps to: VARCHAR (preferred), CHAR, CLOB
-        stringType.setPreferredJdbcType(jdbcTypes.get(JDBCType.VARCHAR));
-        stringType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.VARCHAR),
-            jdbcTypes.get(JDBCType.CHAR),
-            jdbcTypes.get(JDBCType.CLOB)
-        ));
+        // Use type's declared JDBC mappings
+        stringType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(stringType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        stringType.setPreferredJdbcType(
+            jdbcTypes.get(stringType.declarePreferredJdbcType())
+        );
 
         em.persist(stringType);
 
         System.out.println("  → " + stringType.getQualifiedName() +
-                         " → 3 JDBC types (preferred: VARCHAR)");
+                         " → " + stringType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + stringType.getPreferredJdbcType().getJdbcType() + ")");
 
         return stringType;
     }
@@ -594,17 +496,19 @@ public class TypeSystemBootstrap {
         bigDecimalType.setPackageName(OXBigDecimalType.PACKAGE_NAME);
         bigDecimalType.setSimpleName(OXBigDecimalType.SIMPLE_NAME);
 
-        // BigDecimal maps to: NUMERIC (preferred), DECIMAL
-        bigDecimalType.setPreferredJdbcType(jdbcTypes.get(JDBCType.NUMERIC));
-        bigDecimalType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.NUMERIC),
-            jdbcTypes.get(JDBCType.DECIMAL)
-        ));
+        // Use type's declared JDBC mappings
+        bigDecimalType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(bigDecimalType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        bigDecimalType.setPreferredJdbcType(
+            jdbcTypes.get(bigDecimalType.declarePreferredJdbcType())
+        );
 
         em.persist(bigDecimalType);
 
         System.out.println("  → " + bigDecimalType.getQualifiedName() +
-                         " → 2 JDBC types (preferred: NUMERIC)");
+                         " → " + bigDecimalType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + bigDecimalType.getPreferredJdbcType().getJdbcType() + ")");
 
         return bigDecimalType;
     }
@@ -620,18 +524,19 @@ public class TypeSystemBootstrap {
         bigIntegerType.setPackageName(OXBigIntegerType.PACKAGE_NAME);
         bigIntegerType.setSimpleName(OXBigIntegerType.SIMPLE_NAME);
 
-        // BigInteger maps to: NUMERIC (preferred), DECIMAL, BIGINT
-        bigIntegerType.setPreferredJdbcType(jdbcTypes.get(JDBCType.NUMERIC));
-        bigIntegerType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.NUMERIC),
-            jdbcTypes.get(JDBCType.DECIMAL),
-            jdbcTypes.get(JDBCType.BIGINT)
-        ));
+        // Use type's declared JDBC mappings
+        bigIntegerType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(bigIntegerType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        bigIntegerType.setPreferredJdbcType(
+            jdbcTypes.get(bigIntegerType.declarePreferredJdbcType())
+        );
 
         em.persist(bigIntegerType);
 
         System.out.println("  → " + bigIntegerType.getQualifiedName() +
-                         " → 3 JDBC types (preferred: NUMERIC)");
+                         " → " + bigIntegerType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + bigIntegerType.getPreferredJdbcType().getJdbcType() + ")");
 
         return bigIntegerType;
     }
@@ -647,18 +552,19 @@ public class TypeSystemBootstrap {
         dateType.setPackageName(OXDateType.PACKAGE_NAME);
         dateType.setSimpleName(OXDateType.SIMPLE_NAME);
 
-        // java.util.Date maps to: TIMESTAMP (preferred), DATE, TIME
-        dateType.setPreferredJdbcType(jdbcTypes.get(JDBCType.TIMESTAMP));
-        dateType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.TIMESTAMP),
-            jdbcTypes.get(JDBCType.DATE),
-            jdbcTypes.get(JDBCType.TIME)
-        ));
+        // Use type's declared JDBC mappings
+        dateType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(dateType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        dateType.setPreferredJdbcType(
+            jdbcTypes.get(dateType.declarePreferredJdbcType())
+        );
 
         em.persist(dateType);
 
         System.out.println("  → " + dateType.getQualifiedName() +
-                         " → 3 JDBC types (preferred: TIMESTAMP)");
+                         " → " + dateType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + dateType.getPreferredJdbcType().getJdbcType() + ")");
 
         return dateType;
     }
@@ -674,17 +580,19 @@ public class TypeSystemBootstrap {
         sqlDateType.setPackageName(OXSqlDateType.PACKAGE_NAME);
         sqlDateType.setSimpleName(OXSqlDateType.SIMPLE_NAME);
 
-        // java.sql.Date maps to: DATE (preferred), TIMESTAMP
-        sqlDateType.setPreferredJdbcType(jdbcTypes.get(JDBCType.DATE));
-        sqlDateType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.DATE),
-            jdbcTypes.get(JDBCType.TIMESTAMP)
-        ));
+        // Use type's declared JDBC mappings
+        sqlDateType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(sqlDateType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        sqlDateType.setPreferredJdbcType(
+            jdbcTypes.get(sqlDateType.declarePreferredJdbcType())
+        );
 
         em.persist(sqlDateType);
 
         System.out.println("  → " + sqlDateType.getQualifiedName() +
-                         " → 2 JDBC types (preferred: DATE)");
+                         " → " + sqlDateType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + sqlDateType.getPreferredJdbcType().getJdbcType() + ")");
 
         return sqlDateType;
     }
@@ -700,17 +608,19 @@ public class TypeSystemBootstrap {
         sqlTimeType.setPackageName(OXSqlTimeType.PACKAGE_NAME);
         sqlTimeType.setSimpleName(OXSqlTimeType.SIMPLE_NAME);
 
-        // java.sql.Time maps to: TIME (preferred), TIMESTAMP
-        sqlTimeType.setPreferredJdbcType(jdbcTypes.get(JDBCType.TIME));
-        sqlTimeType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.TIME),
-            jdbcTypes.get(JDBCType.TIMESTAMP)
-        ));
+        // Use type's declared JDBC mappings
+        sqlTimeType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(sqlTimeType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        sqlTimeType.setPreferredJdbcType(
+            jdbcTypes.get(sqlTimeType.declarePreferredJdbcType())
+        );
 
         em.persist(sqlTimeType);
 
         System.out.println("  → " + sqlTimeType.getQualifiedName() +
-                         " → 2 JDBC types (preferred: TIME)");
+                         " → " + sqlTimeType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + sqlTimeType.getPreferredJdbcType().getJdbcType() + ")");
 
         return sqlTimeType;
     }
@@ -726,18 +636,19 @@ public class TypeSystemBootstrap {
         sqlTimestampType.setPackageName(OXSqlTimestampType.PACKAGE_NAME);
         sqlTimestampType.setSimpleName(OXSqlTimestampType.SIMPLE_NAME);
 
-        // java.sql.Timestamp maps to: TIMESTAMP (preferred), DATE, TIME
-        sqlTimestampType.setPreferredJdbcType(jdbcTypes.get(JDBCType.TIMESTAMP));
-        sqlTimestampType.setCompatibleJdbcTypes(List.of(
-            jdbcTypes.get(JDBCType.TIMESTAMP),
-            jdbcTypes.get(JDBCType.DATE),
-            jdbcTypes.get(JDBCType.TIME)
-        ));
+        // Use type's declared JDBC mappings
+        sqlTimestampType.setCompatibleJdbcTypes(
+            resolveJdbcTypes(sqlTimestampType.declareCompatibleJdbcTypes(), jdbcTypes)
+        );
+        sqlTimestampType.setPreferredJdbcType(
+            jdbcTypes.get(sqlTimestampType.declarePreferredJdbcType())
+        );
 
         em.persist(sqlTimestampType);
 
         System.out.println("  → " + sqlTimestampType.getQualifiedName() +
-                         " → 3 JDBC types (preferred: TIMESTAMP)");
+                         " → " + sqlTimestampType.getCompatibleJdbcTypes().size() + " JDBC types" +
+                         " (preferred: " + sqlTimestampType.getPreferredJdbcType().getJdbcType() + ")");
 
         return sqlTimestampType;
     }
