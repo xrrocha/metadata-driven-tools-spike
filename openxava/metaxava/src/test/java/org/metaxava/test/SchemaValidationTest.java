@@ -66,7 +66,7 @@ class SchemaValidationTest extends JpaTestBase {
 
         OXPrimitiveType intType = new OXPrimitiveType();
         intType.setName("int");
-        intType.setWrapperName("Integer");
+        // Wrapper relationship deferred - will be set when wrapper types are bootstrapped
 
         em.persist(intType);
         commit();
@@ -136,7 +136,6 @@ class SchemaValidationTest extends JpaTestBase {
         // Create primitive type with JDBC mappings
         OXPrimitiveType intType = new OXPrimitiveType();
         intType.setName("int");
-        intType.setWrapperName("Integer");
         intType.setCompatibleJdbcTypes(List.of(integerType, smallintType));
         intType.setPreferredJdbcType(integerType);
 
@@ -170,12 +169,10 @@ class SchemaValidationTest extends JpaTestBase {
         // Create several primitive types
         OXPrimitiveType intType = new OXPrimitiveType();
         intType.setName("int");
-        intType.setWrapperName("Integer");
         em.persist(intType);
 
         OXPrimitiveType boolType = new OXPrimitiveType();
         boolType.setName("boolean");
-        boolType.setWrapperName("Boolean");
         em.persist(boolType);
 
         commit();
@@ -205,7 +202,6 @@ class SchemaValidationTest extends JpaTestBase {
 
         OXPrimitiveType intType = new OXPrimitiveType();
         intType.setName("int");
-        intType.setWrapperName("Integer");
         em.persist(intType);
 
         commit();

@@ -2,6 +2,7 @@ package org.metaxava.model;
 
 import javax.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 /**
  * OXType - Root of the type hierarchy for MetaXava
@@ -28,6 +29,8 @@ import lombok.*;
 @Table(name = "ox_type")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type_kind", discriminatorType = DiscriminatorType.STRING, length = 20)
+@SuperBuilder
+@NoArgsConstructor
 @Getter @Setter
 public abstract class OXType {
 

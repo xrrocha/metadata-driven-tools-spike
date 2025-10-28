@@ -1,7 +1,9 @@
 package org.metaxava.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import javax.persistence.*;
 import java.util.Collection;
@@ -32,27 +34,34 @@ import java.util.Collection;
  */
 @Entity
 @DiscriminatorValue("PRIMITIVE")
+@SuperBuilder
+@NoArgsConstructor
 @Getter
 @Setter
 public class OXPrimitiveType extends OXType implements OXBasicType {
 
     /**
      * Primitive type name ("int", "boolean", "char", etc.)
+     *
+     * NOTE: nullable=false removed due to SINGLE_TABLE inheritance
+     * (wrappers don't have this field, so column must accept NULL)
      */
     @Basic
-    @Column(name = "primitive_name", nullable = false, length = 7)
+    @Column(name = "primitive_name", length = 7)
     private String name;
 
     /**
-     * Wrapper class simple name ("Integer", "Boolean", "Character", etc.)
-     * Sans "java.lang." prefix - just the simple name.
+     * Associated wrapper type
      *
-     * NOTE: Stringly-typed for now (incomplete).
-     * When we model OXWrapperType, this becomes @ManyToOne relationship.
+     * Examples:
+     * - int → Integer
+     * - boolean → Boolean
+     * - char → Character
+     *
+     * Bidirectional relationship with OXBasicReferenceType.primitiveType
      */
-    @Basic
-    @Column(name = "wrapper_simple_name", nullable = false, length = 10)
-    private String wrapperName;
+    @OneToOne(mappedBy = "primitiveType")
+    private OXBasicReferenceType wrapperType;
 
     // ========== OXBasicType Implementation ==========
     // JPA does NOT support annotations on interfaces, so we must repeat them here.
