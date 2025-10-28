@@ -34,6 +34,31 @@
 			<artifactId>openxava</artifactId>
 			<version>${openxava.version}</version>
 		</dependency>
+
+		<!-- Test Dependencies -->
+		<!-- Hibernate 5.x as JPA implementation (compatible with OpenXava's javax.persistence) -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.6.15.Final</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- H2 in-memory database for testing -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>2.2.224</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- JUnit 5 for testing -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.10.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -112,7 +137,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 				<configuration>
-					<skipTests>true</skipTests>
+					<skipTests>false</skipTests>
 				</configuration>
 			</plugin>
 		</plugins>

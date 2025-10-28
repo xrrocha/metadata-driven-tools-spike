@@ -1,3 +1,4 @@
+./source/
 # Maven build artifacts
 target/
 temp/

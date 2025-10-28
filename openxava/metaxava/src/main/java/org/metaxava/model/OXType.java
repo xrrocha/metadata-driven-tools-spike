@@ -2,7 +2,6 @@ package org.metaxava.model;
 
 import javax.persistence.*;
 import lombok.*;
-import java.util.Optional;
 
 /**
  * OXType - Root of the type hierarchy for MetaXava
@@ -13,9 +12,22 @@ import java.util.Optional;
  * This is the foundation for modeling JPA's type system within JPA itself
  * (the Ouroboros principle).
  *
+ * INHERITANCE STRATEGY:
+ * - @Entity (not @MappedSuperclass) - enables polymorphic queries and relationships
+ * - SINGLE_TABLE - all types in one table for query simplicity
+ * - Discriminator column distinguishes type kinds (PRIMITIVE, STRING, ENTITY, etc.)
+ *
+ * WHY ENTITY:
+ * 1. OXProperty will reference OXType polymorphically: @ManyToOne private OXType type;
+ * 2. Enables shared join table for JDBC mappings (all OXBasicType implementations)
+ * 3. Allows polymorphic queries: "SELECT t FROM OXType t WHERE ..."
+ *
  * @author MetaXava Architecture Session 2025-10-27
  */
-@MappedSuperclass
+@Entity
+@Table(name = "ox_type")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "type_kind", discriminatorType = DiscriminatorType.STRING, length = 20)
 @Getter @Setter
 public abstract class OXType {
 
@@ -23,26 +35,9 @@ public abstract class OXType {
     @GeneratedValue
     private Long id;
 
-    /**
-     * Validator for this type
-     *
-     * DESIGN:
-     * - Wildcard Validator<?> because OXType is not generic
-     * - Concrete subtypes know what they validate:
-     *   - OXValueType<Integer> → Validator<Integer> validates integer values
-     *   - OXEntityType(Customer) → Validator<Customer> validates customer entities
-     * - Defaults to Validator.CATCH_ALL (always valid, no validation)
-     * - Stored as FQN string, instantiated via ValidatorClassConverter
-     *
-     * TODO: Revisit for better type safety - can we avoid Validator<?> wildcard?
-     *
-     * INTEGRATION:
-     * - Metamodel level: Validator<?> instance
-     * - Generated code: javax.validation annotations or custom ConstraintValidator
-     */
-    @Column(name = "validator_class", length = 255)
-    @Convert(converter = ValidatorClassConverter.class)
-    private Validator<?> validator = Validator.CATCH_ALL;
+    // JDBC type mappings removed - now in OXBasicType interface (cross-cutting concern)
+    // Only types implementing OXBasicType have JDBC mappings (primitives, String, BigDecimal, etc.)
+    // Entities and embeddables do NOT have JDBC types (they're compositional)
 
     /**
      * Canonical type name (fully qualified for object types, simple for primitives)
@@ -91,21 +86,22 @@ public abstract class OXType {
      */
     public abstract String generateJavaType();
 
-    /**
-     * Generate import statement if needed
-     *
-     * DESIGN CONSIDERATION:
-     * - May not belong in OXType (TBD - revisit in future pass)
-     * - Not all types need imports (primitives, java.lang.*)
-     * - Decision deferred to subclasses
-     *
-     * IMPLEMENTATION NOTE:
-     * - NEVER return null! Use Optional<String> for optionality
-     * - Subclasses override to provide import when applicable
-     *
-     * @return Optional.empty() if no import needed, Optional.of("import ...") otherwise
-     */
-    public Optional<String> generateImport() {
-        return Optional.empty();  // Default: no import (primitives, java.lang.*)
-    }
+    // TODO (FUTURE - Object Types): generateImport() belongs on object types, not here
+    //
+    // DESIGN RATIONALE FOR REMOVAL:
+    // - Primitives never need imports (int, boolean, double)
+    // - java.lang.* never needs imports (String, Integer, auto-imported)
+    // - Import generation is code-generation concern, not type-system concern
+    //
+    // WHEN TO ADD BACK:
+    // When modeling OXObjectType (entities, embeddables, custom classes):
+    //   @Column
+    //   private String packageName;  // "com.example.domain"
+    //
+    //   public String generateImport() {
+    //       if (packageName.equals("java.lang")) return null;  // Auto-imported
+    //       return "import " + packageName + "." + simpleName + ";";
+    //   }
+    //
+    // Until then: YAGNI. Don't pollute OXType API with premature abstraction.
 }
