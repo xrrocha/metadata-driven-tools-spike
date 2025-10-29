@@ -1,0 +1,775 @@
+# Metadata-Driven Tools Spike / MetaXava Project Context
+
+## 🚨 CRITICAL: .local/ Directory Structure
+
+**IMPORTANT: Read this to avoid wasting time re-discovering these facts!**
+
+### Directory & Git Repository Relationship
+
+```
+metadata-driven-tools-spike/          ← PUBLIC GitHub repo
+├── CLAUDE.md                         ← Symlink → .local/CLAUDE.md.local
+├── README.md                         ← PUBLIC (must NOT reference .local/)
+├── webdsl/
+│   └── README.md                     ← PUBLIC (must NOT reference .local/)
+├── openxava/
+│   └── README.md                     ← PUBLIC (must NOT reference .local/)
+└── .local/                           ← SEPARATE git repo, git-ignored in parent
+    ├── .git/                         ← Its own git history (PRIVATE repo)
+    ├── CLAUDE.md.local               ← The real CLAUDE.md file (this file)
+    ├── session-context.md            ← PRIVATE session state
+    ├── webdsl-reference.md           ← PRIVATE WebDSL reference
+    ├── openxava-reference.md         ← PRIVATE OpenXava/MetaXava patterns
+    ├── to-do.md                      ← PRIVATE task tracking
+    └── history/                      ← PRIVATE conversation dumps
+```
+
+### Git Repositories
+
+**1. Public Repo:** `metadata-driven-tools-spike`
+- Public GitHub repository: https://github.com/xrrocha/metadata-driven-tools-spike
+- `.gitignore` contains `.local/`
+- Public users DO NOT see `.local/` directory
+- Anyone can clone and see the code
+
+**2. Private Repo:** `.local/`
+- Separate git repository (nested under public repo)
+- Tracks session history, private conversations, workflows, experiments
+- Git-ignored in parent repo
+- NOT visible to public GitHub users
+- Contains sensitive/private development context
+
+### Rules for File References
+
+**✅ CAN reference .local/ paths in:**
+- `CLAUDE.md` (it IS `.local/CLAUDE.md.local` via symlink, only visible to you)
+- Files inside `.local/` directory itself
+- Git-ignored files in the main repo
+
+**❌ MUST NOT reference .local/ paths in:**
+- `README.md` (root or any subdirectory) ← **PUBLIC**
+- Any public-facing documentation
+- Code comments in production code
+- Public documentation committed to main repo
+
+**Why:** `.local/` creates **phantom references** for public repo users. They'll see paths that don't exist and can't access.
+
+### Before Committing Any README
+
+**Check for phantom references:**
+```bash
+grep -r '\.local/' **/README.md
+```
+
+If any matches found → **REMOVE THEM** before committing to public repo.
+
+**Replace with:**
+- Official platform documentation links
+- Public GitHub repository links
+- Files that exist in the public repo
+
+### Symlink Reminder
+
+```bash
+ls -la CLAUDE.md
+# Output: CLAUDE.md -> .local/CLAUDE.md.local
+```
+
+You're editing `.local/CLAUDE.md.local` through the symlink. This file is PRIVATE.
+
+---
+
+## Project Identity
+
+**metadata-driven-tools-spike**: Research comparing metadata-driven development platforms
+- **Current Focus:** MetaXava (OpenXava-based code generation)
+- **Goal:** OpenXava application that generates OpenXava applications (Ouroboros closure)
+- **Status:** Type system foundations complete (15/25 types), property hierarchy next
+
+**Philosophy**: Organic growth, empirical validation, formalism-driven development
+
+### Project Evolution (October 2025)
+
+**Phase 1: WebDSL Spike** (Oct 25-26) ✅ **COMPLETED**
+- Successfully validated 9-entity metamodel core
+- Proved Ouroboros closure feasible (system modeled itself)
+- Measured 4x automation ratio empirically
+- Preserved in `webdsl/` directory for reference
+
+**Phase 2: Filer/JavaScript Exploration** (Oct 27) ⏸️ **DEFERRED**
+- Evaluated browser-based JavaScript approach
+- Discovered Ireneo production-ready (657 tests, 94.74% coverage)
+- Decided against: storage limits, unproven at scale, metadata layer incomplete
+
+**Phase 3: OpenXava/MetaXava** (Oct 27-present) 🎯 **CURRENT**
+- **Why OpenXava:** Java source available, inspectable, proven in production, extensible, can contribute upstream
+- 15 basic types implemented with comprehensive testing (15/15 tests passing)
+- Self-describing type system established
+- Clear path to Ouroboros closure (10 weeks estimated)
+
+### WebDSL Lessons Preserved
+
+**10 Non-Negotiables** (validated empirically):
+
+1. **9-Entity Core is the Sweet Spot** - Pareto 80/20 principle validated
+2. **Self-Description is the Keystone** - Ouroboros closure is the ultimate test
+3. **Relationships are First-Class** - Not just entity properties, separate modeling concern
+4. **Extension Points are Essential** - User-provided logic integration required
+5. **Validation is Declarative + Procedural** - Both annotation-based and code-based needed
+6. **UI Generation Must Be Metadata-Driven** - Forms, lists, actions from metamodel
+7. **Generator Complexity Grows Linearly** - Simple metamodel → simple generator
+8. **Closure Testing Validates Completeness** - System models itself = acid test
+9. **Automation Ratio is the North Star** - Measured 4x in WebDSL, target for MetaXava
+10. **Pareto Principle Guides Priorities** - 20% effort → 80% value
+
+**What MetaXava Improves Over WebDSL:**
+
+- ✅ **Type hierarchy** (vs stringly-typed `property.type = "int"`)
+- ✅ **Primitives ≠ wrappers** (distinct types: int vs Integer)
+- ✅ **Enums support** (missing from WebDSL - critical for dropdowns)
+- ✅ **Embeddables** (@Embeddable value objects with recursive relationships)
+- ✅ **Testing from start** (empirical validation, caught @Entity requirement early)
+- ✅ **Java ecosystem** (source available, debuggable, mature tooling)
+
+---
+
+## 🎯 Design Principles
+
+### 1. Static-First for Framework Components
+
+**Build three concrete examples, then abstract. Never abstract from zero examples.**
+
+All framework-provided component types (validators, formatters, converters) are modeled as **static JPA entity hierarchies**.
+
+**Rationale:**
+- Can't design good abstraction without concrete examples
+- Static approach serves 95% of use cases
+- Escape hatches available for 5% edge cases
+- Metamodel/GUI/code generation focus on the static majority
+
+**Example - Validators as Entity Hierarchy:**
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "validator_type")
+public abstract class ValidatorConfig {
+    @Id @GeneratedValue Long id;
+    @Column String errorMessageKey;  // i18n support
+
+    // Code generation support
+    public abstract List<String> generateJavaxValidationAnnotations();
+
+    // Type compatibility checking
+    public abstract boolean isCompatibleWith(OXValueType<?> valueType);
+}
+
+@Entity
+@DiscriminatorValue("RANGE")
+public class RangeValidatorConfig extends ValidatorConfig {
+    @Column(nullable = false) private Integer minValue;
+    @Column(nullable = false) private Integer maxValue;
+
+    @Override
+    public List<String> generateJavaxValidationAnnotations() {
+        return List.of("@Min(" + minValue + ")", "@Max(" + maxValue + ")");
+    }
+}
+```
+
+**The Discipline**: Build 3 validators → observe patterns → build 3 more → confirm patterns → **then** decide if dynamic extensibility needed.
+
+---
+
+### 2. Self-Describing Types
+
+**Types declare their own requirements, not generators.**
+
+**Pattern:**
+```java
+public class OXDateType extends OXBasicReferenceType {
+    @Override
+    public List<String> generateJPAAnnotations() {
+        return List.of("@Temporal(TemporalType.TIMESTAMP)");
+    }
+
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        return List.of(JDBCType.TIMESTAMP, JDBCType.DATE);
+    }
+
+    @Override
+    public JDBCType declarePreferredJdbcType() {
+        return JDBCType.TIMESTAMP;
+    }
+}
+```
+
+**Benefits:**
+- **Single source of truth** - Logic lives with type, not scattered in generators
+- **Dumb generators** - No stringly-typed conditionals (`if (typeName.equals("java.sql.Date"))`)
+- **Extensibility** - New types just override methods
+- **Consistency** - All types follow same pattern
+- **No database storage** - Computed from type identity
+
+**Example Usage in Generator:**
+```java
+// Generator stays dumb:
+for (String annotation : property.getType().generateJPAAnnotations()) {
+    output.println("    " + annotation);
+}
+```
+
+**Established:** Session 9 (Oct 28, 2025)
+
+---
+
+### 3. Testing-Driven Design Validation
+
+**Test early, test often, catch issues before they multiply.**
+
+**Principle:** Introduce testing **just in time** - when design decisions crystallize, not before, not after.
+
+**Success Story (Session 8):**
+Testing caught OXType @MappedSuperclass → @Entity requirement **before** building 20+ types. Saved weeks of refactoring.
+
+**Infrastructure:**
+```java
+// JpaTestBase - EntityManager lifecycle management
+@BeforeEach
+void setUp() {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("test-pu");
+    em = emf.createEntityManager();
+    em.getTransaction().begin();
+}
+
+// SchemaValidationTest - Design assumptions
+@Test
+void testSharedJoinTableWorks() {
+    // Validates: OXType MUST be @Entity for shared type_jdbc_mappings table
+}
+
+// BootstrapTest - Wiring verification
+@Test
+void testTypeJdbcMappingsCreated() {
+    // Validates: 60 JDBC mappings created (primitives + wrappers + references)
+}
+```
+
+**Current Status:** 15/15 tests passing (6 schema + 9 bootstrap)
+
+**Established:** Session 8 (Oct 28, 2025)
+
+---
+
+### 4. Delegation for Single Source of Truth
+
+**Avoid duplication through delegation.**
+
+**Pattern:**
+```java
+// Wrappers delegate JDBC types to primitives (single source of truth)
+public class OXPrimitiveWrapperType extends OXBasicReferenceType {
+    @Override
+    public List<JDBCType> declareCompatibleJdbcTypes() {
+        // Delegate to primitive - wrappers always match primitives
+        return getPrimitiveType().declareCompatibleJdbcTypes();  // ✅
+    }
+}
+```
+
+**Not:**
+```java
+// Duplication - maintenance nightmare
+private static final Map<String, List<JDBCType>> JDBC_MAPPINGS = ...;  // ❌
+```
+
+**Benefits:**
+- DRY: No duplication
+- Single source of truth: Change primitive → wrapper reflects automatically
+- Explicit dependency: Fail-fast if not wired (`getPrimitiveType()` throws if null)
+
+**Established:** Session 10 (Oct 28, 2025)
+
+---
+
+### 5. OXType Architecture Decisions
+
+**Critical foundational design choices validated empirically.**
+
+#### OXType MUST be @Entity (Not @MappedSuperclass)
+
+**Problem:**
+- If `@MappedSuperclass`: Each subclass = separate entity root
+- Join table name collision → undefined behavior
+- Separate ID spaces → data corruption risk
+
+**Solution:**
+```java
+@Entity  // ← CRITICAL (was @MappedSuperclass in Session 5)
+@Table(name = "ox_type")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "type_kind")
+public abstract class OXType { }
+```
+
+**Benefits:**
+- Shared ID space (all types in `ox_type` table)
+- Single join table (`type_jdbc_mappings` references polymorphic ID)
+- Polymorphic queries possible: `SELECT t FROM OXType t WHERE ...`
+- Properties can reference types: `@ManyToOne private OXType type;`
+
+**Validated:** SchemaValidationTest (Session 8)
+
+#### OXBasicType MUST be Interface (Not Abstract Class)
+
+**Problem:**
+- Basic types cross-cut class hierarchy
+- int is basic, Customer entity is NOT
+- Java single inheritance prevents: `class OXStringType extends OXBasicType extends OXClassType`
+
+**Solution:**
+```java
+// Interface as mixin:
+public class OXStringType extends OXClassType implements OXBasicType {  // ✅
+    // JPA annotations MUST be repeated (interfaces don't inherit annotations)
+    @ManyToMany
+    @JoinTable(name = "type_jdbc_mappings", ...)
+    private Collection<JDBCTypeMetadata> compatibleJdbcTypes;
+}
+```
+
+**Trade-off Accepted:** JPA annotation repetition in all implementations (pragmatic, no way around it).
+
+**Established:** Session 8 (Oct 28, 2025)
+
+---
+
+### 6. No Stringly-Typed APIs
+
+**API Level**: Always strongly typed
+
+```java
+// YES ✅
+private ValueType<T> valueType;
+
+// NO ❌
+private String valueTypeClassName;
+```
+
+**Persistence Level**: Converters may use strings internally (implementation detail)
+
+```java
+@Convert(converter = ValueTypeClassConverter.class)
+private ValueType<T> valueType;  // API is typed, persistence is converter's concern
+```
+
+**Rationale:** WebDSL used stringly-typed properties (`property.type = "int"`). MetaXava uses type hierarchy (OXPrimitiveType entity references).
+
+---
+
+### 7. Compilation Always Succeeds
+
+**The Beast Must Compile**: Never leave the codebase in a non-compiling state
+
+- Create skeletal implementations for referenced classes immediately
+- Use `// TODO: [Description]` comments at class level for incomplete implementations
+- Example: `OXDBType`, `ValueTypeClassConverter`
+
+**Finding Tech Debt**:
+```bash
+grep -r "// TODO" src/
+```
+
+This gives us a quick inventory of work-in-progress before moving to next stages.
+
+---
+
+### 8. Type Reification Over Runtime Erasure
+
+**We Reify Types**: Java/JPA type erasure is their limitation, not ours
+
+- Use generics for design clarity: `OXValueType<T>`, `ValueType<T>`
+- Store type information explicitly in metadata when needed
+- Runtime type parameters are preserved in our metamodel, not erased
+
+**Example:**
+```java
+public abstract class OXValueType<T> extends OXType {
+    // T is erased at runtime by Java, but WE retain it in metadata
+}
+
+public class OXInt extends OXValueType<Integer> {
+    // We know this is Integer, Java doesn't need to
+}
+```
+
+---
+
+## ⚙️ Technology Stack
+
+**Development:**
+- **Java 25** (modern features: records, pattern matching, virtual threads)
+- **Maven 3.x** (build management)
+- **Lombok** (boilerplate reduction: @Getter, @Setter, @SuperBuilder)
+
+**Runtime:**
+- **OpenXava 7.6** (web application framework)
+- **JPA/Hibernate 5.6.15** (`javax.persistence`, not Jakarta yet)
+- **PostgreSQL** (production database - planned)
+
+**Testing:**
+- **JUnit 5** (testing framework)
+- **H2 in-memory database** (fast, deterministic, no external dependencies)
+- **JpaTestBase pattern** (EntityManager lifecycle management)
+
+**Current Build Status:** ✅ 15/15 tests passing
+
+---
+
+## 📁 File Structure & Git Guidelines
+
+### `.local/` Directory - Private Playground (Git-Ignored)
+
+**IMPORTANT:** The `.local/` directory is **git-ignored** and serves as a **private playground**:
+
+- ✅ Use for: Session context files, scratch work, experiments, reference materials, notes
+- ✅ Examples: `session-context.md`, `webdsl-reference.md`, experiments, design explorations
+- ❌ **NEVER attempt to commit files in `.local/`** to the main repo
+- ❌ Don't put production code here
+
+**Purpose:**
+- Scratch space for exploration without polluting git history
+- Session restoration context (survives across sessions but not in repo)
+- Reference materials from experiments
+
+**Rule:** If it's in `.local/`, it's ephemeral. Application code belongs in `openxava/metaxava/` or `webdsl/` (preserved reference).
+
+**Note:** `.local/` has its own nested git repository for session history tracking. This is separate from any main project repo.
+
+### Externalizing Knowledge from `.local/`
+
+**Periodic Reflection - When to Graduate Artifacts:**
+
+While `.local/` has its own git history (nothing is lost!), some artifacts mature beyond session context and become **user-relevant project documentation**:
+
+**Promote to main repo when:**
+- Design documents become authoritative references
+- Discoveries in reference files are valuable for other contributors
+- Experiments prove successful and need formal documentation
+- Insights should be preserved in main project history
+
+**How to externalize:**
+1. Copy/move the artifact to appropriate location in main repo
+2. Replace `.local/` version with symlink (if still needed for sessions)
+3. Commit to main repo with descriptive message
+4. Update `.local/session-context.md` to reference new location
+
+**Key insight:** `.local/` is versioned separately, so nothing is at risk. This is about **surfacing valuable knowledge** to users/collaborators, not about data preservation.
+
+### Session Restoration
+
+**On every session start, automatically check for and read `.local/session-context.md`:**
+
+If the file exists:
+- Read it immediately to restore session state
+- Understand current work, recent decisions, active discussions
+- Review what was completed and what's in progress
+- Check current branch and working mode
+- Pick up where we left off seamlessly
+
+This file contains:
+- Current branch and development focus
+- Session goals and completed work
+- Recent commits and their significance
+- Active design discussions
+- Open questions and resumption checklist
+
+**No need for user to ask** - just read it automatically at session start if present. This ensures continuity across sessions.
+
+**IMPORTANT:** Do NOT read conversation dumps on session startup (prohibitively expensive context-wise). Session-context.md is kept current during dump time, so it's the only file needed for restoration.
+
+### Session Context Pruning
+
+**IMPORTANT**: `.local/session-context.md` tends to accumulate historical content over time.
+
+**When to prune** (periodic maintenance):
+- When file exceeds ~200 lines
+- When switching to a new major focus area
+- When historical discussions have been documented elsewhere
+
+**How to prune**:
+1. **Archive first**: Copy to `.local/history/${yyyy-mm-dd-hhmmss}-session-context-archive-pre-pruning.md`
+2. **Prune ruthlessly**: Keep only:
+   - Current goal (what we're working on NOW)
+   - Latest commits (last 3-5)
+   - Quick technical context (just enough to resume)
+   - Next steps (immediate actions)
+   - References (pointers to detailed docs)
+3. **Remove**:
+   - Completed work (archived in commits/dumps)
+   - Historical discussions (archived in conversation dumps)
+   - Infrastructure already established (documented in other files)
+   - Design explorations that concluded (archived in dumps)
+
+**Target**: Keep session-context.md lean (~150-200 lines) and focused on CURRENT work.
+
+---
+
+## 📚 Project Reference Documentation
+
+**Comprehensive technical reference**: `.local/webdsl-reference.md` (WebDSL - legacy)
+
+This file contains detailed information about WebDSL:
+- WebDSL installation & setup (binary, dependencies, macOS fixes)
+- Entity definitions & relationships
+- Pages, templates & navigation
+- Functions & action code
+- String manipulation & code generation patterns
+
+**OpenXava/MetaXava reference**: `.local/openxava-reference.md` (current)
+
+This file contains MetaXava-specific patterns:
+- JPA entity patterns (SINGLE_TABLE inheritance, discriminators, bidirectional relationships)
+- Bootstrap patterns (PHASE-based wiring, self-describing declarations)
+- Testing patterns (JpaTestBase, schema validation, H2 setup)
+- Code generation patterns (generateJPAAnnotations, generateJavaType)
+- Common gotchas (@Entity vs @MappedSuperclass, annotation repetition)
+
+### When to Read Reference Documentation
+
+**Auto-read on first session:**
+- If you don't have context about OpenXava/MetaXava patterns
+- When starting work on a new area you haven't explored
+
+**Read specific sections when:**
+- **Implementing types**: Read self-describing types patterns
+- **Writing tests**: Read testing patterns section
+- **Bootstrap changes**: Read PHASE-based wiring section
+- **Troubleshooting**: Read common gotchas section
+
+---
+
+## 🧠 Thinking vs Doing Mode Protocol
+
+### Default Mode: THINKING
+
+Unless explicitly signaled otherwise, **we are in THINKING mode** (design/exploration).
+
+### Mode Commands
+
+**`/think`** - Explicit thinking/exploration mode
+- Design, architecture, exploring alternatives
+- No implementation, no code changes
+- Socratic questioning, surfacing tensions
+- Waiting for design to crystallize
+
+**`/code`** - Explicit doing/implementation mode
+- Write code, create files, make changes
+- Implementation work begins
+- Still maintain design conversation, but action-oriented
+
+### Mode Reminders
+
+**At session start:** I'll remind you to state which mode we're in (while you internalize this protocol).
+
+**During sessions:** If design seems to crystallize and we're flowing toward implementation, I'll proactively ask: *"Should we move to /code mode?"*
+
+This respects your cognitive process - no premature implementation before your "intuiter clicks."
+
+### Mode Signal Detection
+
+**THINKING mode signals** (I'll detect and honor):
+- "let's think about..."
+- "I'm exploring..."
+- "my intuiter hasn't clicked yet"
+- "let's not rush..."
+- "please understand we're exploring..."
+- "I'm not looking for the quickest way out"
+
+**DOING mode signals** (permission to implement):
+- "let's implement..."
+- "let's prototype..."
+- "my intuiter has clicked"
+- "time to code this"
+- "let's flesh this out"
+
+**When uncertain:** I'll ask explicitly before writing any code: *"Should I sketch code for this?"*
+
+### Recovery Protocol
+
+If I violate the mode boundary:
+1. You say: "we're in thinking mode" (or similar)
+2. I apologize and return to conceptual space immediately
+3. No guilt, just course correction
+4. We continue the design conversation
+
+**Why this matters:** Your "intuiter" process is how you reach Saint-Exupéry's perfection (nothing left to take away). Rushing to implementation prematurely interrupts that process and risks bad architecture.
+
+---
+
+## 🤝 Collaboration Guidelines
+
+### Ask Honest Questions Up-Front
+
+You value directness and won't be offended by honest questions. When I need clarification:
+- Ask directly: "What did you mean by X?"
+- Challenge when something seems unclear
+- Surface contradictions early
+- Request precision when needed ("Should I look in session context or in code?")
+
+**Trust without false certainty.** We're thinking partners, not an instruction-execution relationship.
+
+### Gentle Fatigue Checking
+
+If I observe unusual patterns (excessive contradictions, uncharacteristic confusion, erratic thinking), I may gently ask:
+*"Are you tired? Should we defer this decision?"*
+
+This is optional and light-touch - detecting fatigue perfectly would be excessive burden. But when patterns are clear, I'll ask.
+
+### Be Specific About WHERE to Look
+
+When you ask me to find something, be specific about location when possible:
+- ✅ "It's in the session context"
+- ✅ "Check the .local/history files"
+- ✅ "We wrote it in code yesterday"
+- ❌ "Find that pattern we discussed" (where? when? in what form?)
+
+This avoids unnecessary file searches and respects both our time.
+
+### Trust With Verification
+
+You trust my coding abilities but not blindly. This is healthy:
+- I implement based on agreed design
+- You review and provide feedback
+- I learn from corrections
+- We iterate together
+
+**The dynamic we've built:** Security, motivation, respect for abilities, mindful of feedback. This is how talented people collaborate.
+
+---
+
+## 🔄 Session Management
+
+### To-Do File Management
+
+**File**: `.local/to-do.md`
+
+When the user says **"let's add this to the to-do"** or **"add to to-do"**, append the item to `.local/to-do.md`.
+
+This is our task tracking for features, improvements, and future work.
+
+### Conversation History Archival
+
+When the user says **"dump time"** or **"let's dump this conversation"**, create a **DETAILED** summary and write it to:
+
+**`.local/history/${yyyy-mm-dd-hhmmss}-descriptive-title.md`**
+
+Where:
+- `yyyy-mm-dd-hhmmss` = timestamp
+- `descriptive-title` = your suggested title
+
+**Include:**
+- Full context of what was discussed
+- Key decisions made
+- Design insights and trade-offs explored
+- Action items and outcomes
+- Relevant code snippets or examples
+- Links to related files/commits
+
+**IMPORTANT - Process Reflection:**
+- **Include reflections on actions by BOTH parties** (user and Claude)
+- Flag overengineering attempts, unclear explanations, or process inefficiencies
+- Note what worked well in the workflow
+- Document lessons learned for future sessions
+- We're equals in collaboration
+- The goal is mutual improvement and better process
+
+**IMPORTANT - Session Context Update:**
+- **During dump time**, extract key information and update `.local/session-context.md`
+- Update: current goal, recent commits, next steps, key decisions
+- This keeps session-context current so **new sessions don't need to re-read dumps**
+- **Session startup**: Read session-context.md ONLY (lightweight, ~200 lines)
+- **Conversation dumps**: Historical reference ONLY, not for session restoration
+
+**IMPORTANT - Commit & Push Protocol:**
+
+**Unless explicitly stated otherwise**, "dump time" includes:
+1. Create detailed conversation summary in `.local/history/`
+2. Update `.local/to-do.md` if relevant
+3. Update `.local/session-context.md` if relevant
+4. **Commit and push `.local/` repo** (session history tracking)
+5. **Commit and push work repo** (if changes exist in main codebase)
+
+**Commit messages should be descriptive:**
+- `.local/` repo: Focus on what was learned/decided
+- Work repo: Focus on what code/docs changed
+
+This ensures both session history and codebase changes are preserved.
+
+---
+
+## 📖 Documentation
+
+**Key docs:**
+- **`.local/session-context.md`** - Current work and session state (updated Oct 29)
+- **`.local/to-do.md`** - Implementation roadmap and task tracking (updated Oct 29)
+- **`.local/webdsl-reference.md`** - WebDSL technical reference (legacy, preserved)
+- **`.local/openxava-reference.md`** - OpenXava/MetaXava patterns (current)
+- **`.local/history/`** - Conversation dumps (10+ sessions documented)
+- **`openxava/metaxava/CLAUDE.md`** - MetaXava-specific design principles
+- **`webdsl/`** - Preserved WebDSL spike (lessons learned, 9-entity core)
+
+---
+
+## 🔗 External Resources
+
+**OpenXava:**
+- **Official Site**: https://www.openxava.org/
+- **Documentation**: https://www.openxava.org/docs/en/
+- **GitHub**: https://github.com/openxava/openxava
+- **Examples**: https://www.openxava.org/en/demos
+
+**JPA/Hibernate:**
+- **JPA 3.x Spec**: https://jakarta.ee/specifications/persistence/3.2/
+- **Hibernate Docs**: https://hibernate.org/orm/documentation/
+
+**WebDSL (reference/legacy):**
+- **Docs**: https://webdsl.org/reference/
+- **GitHub**: https://github.com/webdsl/webdsl
+- **Build Server**: https://buildfarm.metaborg.org/job/webdsl-compiler/
+
+**Project Context:**
+- **Author**: Ricardo Rocha
+- **Related**: Ireneo project (~/Workspace/ireneo) - separate production system
+- **Inspirations**: Entity-Relationship modeling, self-describing systems, bootstrapping compilers
+
+---
+
+## ⚙️ Development Workflow
+
+**Compile & Test:**
+```bash
+cd openxava/metaxava
+mvn clean test
+```
+
+**Run Application (when ready):**
+```bash
+mvn tomcat7:run
+# Access at http://localhost:8080/metaxava
+```
+
+**Find Tech Debt:**
+```bash
+grep -r "// TODO" src/
+```
+
+**Current Build Status:** ✅ 15/15 tests passing (6 schema + 9 bootstrap)
+
+**Git Branches:**
+- **main** - current development branch
+- No feature branches yet (early stage, single developer)
+
+---
+
+**Quick Reference**: When in doubt, check `.local/session-context.md` for current status, `.local/openxava-reference.md` for current patterns (or `.local/webdsl-reference.md` for WebDSL legacy), and `.local/to-do.md` for next tasks.
