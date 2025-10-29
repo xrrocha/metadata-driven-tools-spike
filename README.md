@@ -43,4 +43,6 @@ Java-based model-driven framework for business applications. See [openxava/READM
 - [WebDSL Official Docs](https://webdsl.org/reference/)
 - [OpenXava Official Site](https://www.openxava.org/)
 - Project context: See `.local/ouroboros-manifesto.md`
-- Technical reference: See `.local/reference.md`
+- Technical references:
+  - WebDSL: `.local/webdsl-reference.md`
+  - OpenXava: `.local/openxava-reference.md`
