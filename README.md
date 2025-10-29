@@ -7,8 +7,7 @@ Research spike exploring metadata-driven approaches for building self-describing
 ```
 metadata-driven-tools-spike/
 ├── webdsl/           # WebDSL exploration and applications
-├── openxava/         # OpenXava exploration (upcoming)
-└── .local/           # Session context, reference docs, history
+└── openxava/         # OpenXava exploration (current focus)
 ```
 
 ## Explorations
@@ -42,7 +41,6 @@ Java-based model-driven framework for business applications. See [openxava/READM
 
 - [WebDSL Official Docs](https://webdsl.org/reference/)
 - [OpenXava Official Site](https://www.openxava.org/)
-- Project context: See `.local/ouroboros-manifesto.md`
-- Technical references:
-  - WebDSL: `.local/webdsl-reference.md`
-  - OpenXava: `.local/openxava-reference.md`
+- [OpenXava Documentation](https://www.openxava.org/docs/en/)
+- [WebDSL GitHub](https://github.com/webdsl/webdsl)
+- [OpenXava GitHub](https://github.com/openxava/openxava)
