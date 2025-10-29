@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.2"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+
+    <!--
+    MetaXava Test Persistence Unit
+
+    DESIGN:
+    - Hibernate 6.x (same JPA provider as OpenXava)
+    - H2 in-memory database (fast, isolated tests)
+    - create-drop schema (fresh DB per test run)
+    - SQL logging enabled (see what Hibernate generates)
+
+    PURPOSE:
+    - Validate JPA entity design in isolation
+    - Test inheritance strategies
+    - Verify join table configuration
+    - Ensure schema generation works correctly
+    -->
+    <persistence-unit name="metaxava-test" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <!-- Entity classes -->
+        <class>org.metaxava.model.OXType</class>
+        <class>org.metaxava.model.OXPrimitiveType</class>
+        <class>org.metaxava.model.OXReferenceType</class>
+        <class>org.metaxava.model.OXBasicReferenceType</class>
+        <class>org.metaxava.model.OXPrimitiveWrapperType</class>
+        <class>org.metaxava.model.OXStringType</class>
+        <class>org.metaxava.model.OXBigDecimalType</class>
+        <class>org.metaxava.model.OXBigIntegerType</class>
+        <class>org.metaxava.model.OXDateType</class>
+        <class>org.metaxava.model.OXSqlDateType</class>
+        <class>org.metaxava.model.OXSqlTimeType</class>
+        <class>org.metaxava.model.OXSqlTimestampType</class>
+        <class>org.metaxava.model.JDBCTypeMetadata</class>
+
+        <!-- Exclude unlisted classes (don't scan) -->
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+        <properties>
+            <!-- H2 in-memory database -->
+            <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:metaxava_test;DB_CLOSE_DELAY=-1"/>
+            <property name="javax.persistence.jdbc.user" value="sa"/>
+            <property name="javax.persistence.jdbc.password" value=""/>
+
+            <!-- Hibernate settings -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <!-- Performance (in-memory) -->
+            <property name="hibernate.connection.pool_size" value="1"/>
+            <property name="hibernate.jdbc.batch_size" value="0"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
