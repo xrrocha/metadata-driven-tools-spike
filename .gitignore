@@ -1,10 +1,11 @@
-./webdsl/
+book-generated/
 .claude/
+CLAUDE.md
 .DS_Store
+.idea/
 .local/
+plugin-build-deps/
 .servletapp/
+./webdsl/
 .webdsl-fragment-cache/
 .webdsl-parsecache/
-book-generated/
-CLAUDE.md
-plugin-build-deps/
